@@ -77,7 +77,7 @@ void master_process(point* segptr, int workers_semid, int access_semid, int posU
 }
 
 
-worker(int id, point* segptr, int workers_semid, int access_semid, int speedx, int speedy){
+worker(int id, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
     point next_pos;
     point current_pos;
 
@@ -137,7 +137,6 @@ square* initializeSquares(int SQUARE_COUNT){
   int s = 0;
   int s_speedx = 0;
   int s_speedy = 0;
-  int s_color = 0;
 
   int k = 0;
   while(k < selfinit_squares) {
@@ -151,12 +150,11 @@ square* initializeSquares(int SQUARE_COUNT){
     scanf("%d",&s_speedx);
     printf("speedy = ");
     scanf("%d",&s_speedy);
-    printf("color = ");
-    scanf("%d",&s_color);
+
 
     int table_size = 0;
 
-    square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy, .color = s_color};
+    square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy, .color = k % 4};
 
     // Check if the coordinates are in the bounds of the grid
     if(s_x + SQUARE_WIDTH <= SIZE_X && s_y + SQUARE_WIDTH <= SIZE_Y) {
@@ -185,7 +183,7 @@ square* initializeSquares(int SQUARE_COUNT){
                .y = rand()%(SIZE_Y - SQUARE_WIDTH),
                .speedx = rand()% 3 -1,
                  .speedy = rand()%3 -1,
-                 .color = rand()%4
+                 .color = selfinit_squares % 4
                 };
 
     for(int j = 0; j < selfinit_squares; j++){
@@ -226,7 +224,8 @@ int main(int argc, char** argv){
 	scanf("%d", &SQUARE_COUNT);
 
 	//Initialize SQUARE_COUNT number of squares
-	square* squares_table = initializeSquares(SQUARE_COUNT);
+	square* squares_table;
+	initializeSquares(squares_table,SQUARE_COUNT);
 
 	key_t key_sem_workers, key_sem_access; key_sem_posUpdated;
 	pid_t pid;
@@ -318,3 +317,13 @@ int main(int argc, char** argv){
 	
 	return 1;
 }
+
+
+/*
+void control_process(){
+	while(getChar()){}
+	removeshm(int shmid);
+	removeshm(int shmid)
+}
+*/
+
