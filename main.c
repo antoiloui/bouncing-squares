@@ -32,6 +32,7 @@ void control_process(){
 */
 
 master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
+
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
   int finish = 0;
@@ -81,7 +82,9 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 }
 
 
+
 worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
+
     point next_pos;
     point current_pos;
     int finish = 0;
