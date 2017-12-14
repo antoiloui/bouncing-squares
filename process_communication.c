@@ -14,6 +14,7 @@
 
 //Locks semaphore 'member' with in sempahore set with id "sid"
 void locksem(int sid, int member){
+
         struct sembuf sem_lock={0, -1, 0}; //IPC_NO_WAIT removed
 
         if( member<0 || member>(get_member_count(sid)-1)){
@@ -40,19 +41,12 @@ void locksem(int sid, int member){
 }
 
 void unlocksem(int sid, int member){
-        struct sembuf sem_unlock={ member, 1,0}; //IPC_NO_WAIT removed
+        struct sembuf sem_unlock={member, 1,0}; //IPC_NO_WAIT removed
         int semval;
 
         if( member<0 || member>(get_member_count(sid)-1)){
                 fprintf(stderr, "semaphore member %d out of range\n", member);
                 return;
-        }
-
-        /* Is the semaphore set locked? */
-        semval = getval(sid, member);
-        if(semval == SEM_RESOURCE_MAX) {
-                fprintf(stderr, "Semaphore not locked!\n");
-                exit(1);
         }
 
         sem_unlock.sem_num = member;

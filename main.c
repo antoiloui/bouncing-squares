@@ -8,6 +8,9 @@
 #include <string.h>
 #include <time.h>
 #include<stdbool.h>
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "process_communication.h"
 #include "constants.h"
@@ -47,7 +50,7 @@ int main(int argc, char** argv){
 
 	key_t key_sem_workers, key_sem_access; key_sem_posUpdated;
 	pid_t pid;
-    int  shmid;
+  int  shmid;
 
     key_sem_access = ftok(".", 'A');
     key_sem_workers = ftok(".", 'W');
