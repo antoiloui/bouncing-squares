@@ -136,7 +136,7 @@ void setall(int sid,ushort value){
 
 
 point writeshm(point* segptr,int index, point value){
-        segptr[index] = value;
+        return segptr[index] = value;
 }
 
 point readshm(point* segptr, int index){
