@@ -9,8 +9,12 @@
 #include <time.h>
 #include<stdbool.h>
 
+<<<<<<< HEAD
 
 
+=======
+#include "process_communications.h"
+>>>>>>> 2d0c3aebf6f4891af204b8cc79d67e5f9e271531
 //void locksem(int sid, int member); //Remored IPC_NO_WAIT
 //void unlocksem(int sid, int member); //Remored IPC_NO_WAIT
 //void createsem(int *sid, key_t key, int members);
