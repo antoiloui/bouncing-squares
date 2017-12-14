@@ -239,7 +239,7 @@ int main(int argc, char** argv){
     int shmsize = SQUARE_COUNT*sizeof(square) + 1;
 
 	/* Open the shared memory segment - create if necessary */
-    if((shmid = shmget(key,shmsize, IPC_CREAT|IPC_EXCL|0666)) == -1) {
+    if((shmid = shmget(key_shm,shmsize, IPC_CREAT|IPC_EXCL|0666)) == -1) {
             printf("Shared memory segment exists - opening as client\n");
 
             /* Segment probably already exists - try as a client */
@@ -312,7 +312,7 @@ int main(int argc, char** argv){
 	writeshm(segptr,0,finish); //finish = 0;
 
 	//We enter the master_process code
-	master_process(segptr,workers_semid,access_semid,posUpdated_semid);
+	master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid);
 
 	
 	return 1;
