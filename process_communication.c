@@ -48,8 +48,6 @@ void locksem(int sid, int member){
         }
         else
                 printf("Semaphore resources decremented by one (locked)\n");
-
-        dispval(sid, member);
 }
 
 void unlocksem(int sid, int member){
@@ -68,9 +66,8 @@ void unlocksem(int sid, int member){
                 exit(1);
         }
         else
-                printf("Semaphore resources incremented by one (unlocked)\n");
+            printf("Semaphore resources incremented by one (unlocked)\n");
 
-        dispval(sid, member);
 }
 
 
