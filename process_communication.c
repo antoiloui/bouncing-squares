@@ -78,14 +78,6 @@ void unlocksem(int sid, int member){
 
 
 void createsem(int *sid, key_t key, int members){
-        int cntr;
-        union semun semopts;
-
-        if(members > SEMMSL) {
-                printf("Sorry, max number of semaphores in a set is %d\n",
-                        SEMMSL);
-                exit(1);
-        }
 
         printf("Attempting to create new semaphore set with %d members\n",
                                 members);
@@ -95,11 +87,6 @@ void createsem(int *sid, key_t key, int members){
                 exit(1);
         }
 
-        semopts.val = SEM_RESOURCE_MAX;
-        
-        /* Initialize all members (could be done with SETALL) */        
-        for(cntr=0; cntr<members; cntr++)
-                semctl(*sid, cntr, SETVAL, semopts);
 }
 
 

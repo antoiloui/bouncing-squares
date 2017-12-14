@@ -80,10 +80,10 @@ int main(int argc, char** argv){
     }
 
 	//Creating a semaphore set with SQUARE_COUNT members
-	createsem(&workers_semid,key_sem_workers ,SQUARE_COUNT);
+	createsem(&workers_semid, key_sem_workers, SQUARE_COUNT);
 	setAll(workers_semid,0);
 	//Create a mutex to use when all workers have updated their positions
-	createsem(&access_semid,key_sem_posUpdated,1);
+	createsem(&access_semid, key_sem_posUpdated, 1);
 	setval(posUpdated_semid,0,0);
 
 	//Create a mutex for the access to the square table
