@@ -89,7 +89,7 @@ void unlocksem(int sid, int member);
 unsigned short get_member_count(int sid);
 void createsem(int *sid, key_t key, int members);
 int getval(int sid, int member);
-void setAll(int sid,ushort value);
+void setall(int sid,ushort value);
 void setval(int sid, int semnum, int value);
 point writeshm(point* segptr, int shmid, point value);
 //void changemode(int shmid, char *mode); 
