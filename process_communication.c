@@ -54,7 +54,6 @@ void locksem(int sid, int member){
 
 void unlocksem(int sid, int member){
         struct sembuf sem_unlock={member, 1,0}; //IPC_NO_WAIT removed
-        int semval;
 
         if( member<0 || member>(get_member_count(sid)-1)){
                 fprintf(stderr, "semaphore member %d out of range\n", member);
@@ -122,11 +121,12 @@ void setval( int sid, int semnum, int value){
 
 void setall(int sid,ushort value){
     union semun semopts;
+    int cntr;
     
     members = get_member_count(sid);
     ushort myArray[members];
     
-    for(int cntr=0; cntr<members; cntr++){
+    for(cntr=0; cntr<members; cntr++){
         myArray[cntr] = value;
     }
 
