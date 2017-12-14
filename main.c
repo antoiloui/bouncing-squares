@@ -30,9 +30,9 @@ void control_process(){
 master_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid) {
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
-  int temp;
-  point finish;
+  int finish = 0;
   int id,j,k;
+  
   //As long as the user doesn't quit
   while((finish = readshm(segptr,0).x) != 1) {
     
@@ -58,11 +58,11 @@ master_process(point* segptr, int workers_semid, int access_semid, int posUpdate
          table_of_pixels[j][k] = 0;
         }
       }
-    for(id = 1; i <= SQUARE_COUNT; id++){
+    for(id = 1; id <= SQUARE_COUNT; id++){
       for(j = 0; j < SQUARE_WIDTH; j++){
           for(k = 0; k < SQUARE_WIDTH; k++){
             point position = readshm(segptr,id);
-              table_of_pixels[position.x+j][position.y+k] = squares_table[id-1].color;
+            table_of_pixels[position.x+j][position.y+k] = id % 4;
           }
         }
     }
@@ -77,9 +77,10 @@ master_process(point* segptr, int workers_semid, int access_semid, int posUpdate
 }
 
 
-worker(int id, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
+void worker(int id, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
     point next_pos;
     point current_pos;
+    int finsish = 0;
 
   while((finish = readshm(segptr,0).x) != 1) {
 
