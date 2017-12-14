@@ -213,6 +213,10 @@ int main(int argc, char** argv){
 	int workers_semid;
 	int access_semid;
 	int posUpdated_semid;
+  	int  shmid;
+	key_t key_sem_workers, key_sem_access, key_sem_posUpdated;
+	key_t key_shm;
+	pid_t pid;
 	point *segptr;
 
 	//Asking how much squares user wants
@@ -224,10 +228,6 @@ int main(int argc, char** argv){
 	square* squares_table[SQUARE_COUNT];
 	initializeSquares(squares_table,SQUARE_COUNT);
 
-	key_t key_sem_workers, key_sem_access, key_sem_posUpdated;
-	key_t key_shm;
-	pid_t pid;
-  int  shmid;
 
     key_sem_access = ftok(".", 'A');
     key_sem_workers = ftok(".", 'W');
@@ -258,11 +258,12 @@ int main(int argc, char** argv){
             exit(1);
     }
 
+
 	//Creating a semaphore set with SQUARE_COUNT members
 	createsem(&workers_semid, key_sem_workers, SQUARE_COUNT);
 	setall(workers_semid,0);
 	//Create a mutex to use when all workers have updated their positions
-	createsem(&access_semid, key_sem_posUpdated, 1);
+	createsem(&posUpdated_semid, key_sem_posUpdated, 1);
 	setval(posUpdated_semid,0,0);
 
 	//Create a mutex for the access to the square table
@@ -294,7 +295,6 @@ int main(int argc, char** argv){
 			id++;
 		}
 	}   
-
 
 	//Initializes SDL and the colours
   	init_output();
