@@ -124,7 +124,7 @@ int hasIntersection(square a, square b){
 
 
 
-square* initializeSquares(square* squares_table,int SQUARE_COUNT){
+void initializeSquares(square* squares_table,int SQUARE_COUNT){
   
   // Initialising squares by user and randomly
   int selfinit_squares = 0;
