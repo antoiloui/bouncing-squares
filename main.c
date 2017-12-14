@@ -81,11 +81,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 }
 
 
-<<<<<<< HEAD
 void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
-=======
-worker(int id, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
->>>>>>> 016911d9a2558022c2f10b7bf6c75136cef1a435
     point next_pos;
     point current_pos;
     int finish = 0;
@@ -236,7 +232,7 @@ int main(int argc, char** argv){
 
     key_sem_access = ftok(".", 'A');
     key_sem_workers = ftok(".", 'W');
-    key_sem_allUpdated = ftok(".",'U');
+    key_sem_posUpdated = ftok(".",'U');
     key_shm = ftok(".",'S');
     //We need to put the square table in shared memory, as well
    	// as finish 
