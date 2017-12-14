@@ -139,7 +139,6 @@ square* initializeSquares(square* squares_table,int SQUARE_COUNT){
 
   int s_x = 0;
   int s_y = 0;
-  int s = 0;
   int s_speedx = 0;
   int s_speedy = 0;
 
@@ -203,7 +202,7 @@ square* initializeSquares(square* squares_table,int SQUARE_COUNT){
     }
   }
 
-  return squares_table;
+  return;
 }
 
 
