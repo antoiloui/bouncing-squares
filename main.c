@@ -83,7 +83,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
 
 
-void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
+worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
 
     point next_pos;
     point current_pos;
@@ -245,7 +245,7 @@ int main(int argc, char** argv){
             printf("Shared memory segment exists - opening as client\n");
 
             /* Segment probably already exists - try as a client */
-            if((shmid = shmget(key,shmsize, 0)) == -1) 
+            if((shmid = shmget(key_shm,shmsize, 0)) == -1) 
             {
                     perror("shmget");
                     exit(1);
