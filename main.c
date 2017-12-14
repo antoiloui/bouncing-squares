@@ -83,7 +83,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
 
 
-worker(int id, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
+void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
 
     point next_pos;
     point current_pos;
@@ -234,14 +234,14 @@ int main(int argc, char** argv){
 
     key_sem_access = ftok(".", 'A');
     key_sem_workers = ftok(".", 'W');
-    key_sem_allUpdated = ftok(".",'U');
+    key_sem_posUpdated = ftok(".",'U');
     key_shm = ftok(".",'S');
     //We need to put the square table in shared memory, as well
    	// as finish 
     int shmsize = SQUARE_COUNT*sizeof(square) + 1;
 
 	/* Open the shared memory segment - create if necessary */
-    if((shmid = shmget(key,shmsize, IPC_CREAT|IPC_EXCL|0666)) == -1) {
+    if((shmid = shmget(key_shm,shmsize, IPC_CREAT|IPC_EXCL|0666)) == -1) {
             printf("Shared memory segment exists - opening as client\n");
 
             /* Segment probably already exists - try as a client */
@@ -314,7 +314,7 @@ int main(int argc, char** argv){
 	writeshm(segptr,0,finish); //finish = 0;
 
 	//We enter the master_process code
-	master_process(segptr,workers_semid,access_semid,posUpdated_semid);
+	master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid);
 
 	
 	return 1;
