@@ -27,7 +27,7 @@ void control_process(){
 }
 */
 
-master_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid) {
+master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
   int finish = 0;
@@ -77,7 +77,7 @@ master_process(point* segptr, int workers_semid, int access_semid, int posUpdate
 }
 
 
-void worker(int id, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
+void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
     point next_pos;
     point current_pos;
     int finsish = 0;
@@ -212,13 +212,6 @@ int main(int argc, char** argv){
 	int posUpdated_semid;
 	point *segptr;
 
-	int iterations=-1;
-	
-	//The eventual parameter is the number of iterations
-	if(argc > 1)
-		iterations=atoi(argv[1]);
-
-
 	//Asking how much squares user wants
 	printf("How many squares running ?\n");
 	int SQUARE_COUNT = 0;
@@ -228,13 +221,15 @@ int main(int argc, char** argv){
 	square* squares_table;
 	initializeSquares(squares_table,SQUARE_COUNT);
 
-	key_t key_sem_workers, key_sem_access; key_sem_posUpdated;
+	key_t key_sem_workers, key_sem_access, key_sem_posUpdated;
+	key_t key_shm;
 	pid_t pid;
   int  shmid;
 
     key_sem_access = ftok(".", 'A');
     key_sem_workers = ftok(".", 'W');
     key_sem_allUpdated = ftok(".",'U');
+    key_shm = ftok(".",'S');
     //We need to put the square table in shared memory, as well
    	// as finish 
     int shmsize = SQUARE_COUNT*sizeof(square) + 1;
@@ -287,7 +282,7 @@ int main(int argc, char** argv){
 			//This is a son
 			int speedx = squares_table[id-1].speedx;
 			int speedy = squares_table[id-1].speedy;
-			worker(id,segptr,workers_semid,access_semid,posUpdated_semid,speedx,speedy);
+			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,speedx,speedy);
 			cntr = SQUARE_COUNT;
 		}
 		else
