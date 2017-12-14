@@ -15,9 +15,6 @@
 //void createsem(int *sid, key_t key, int members);
 //int getval(int sid, int member);
 
-
-
-
 /*
 
 // One semaphore structure for each semaphore in the system. 
