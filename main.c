@@ -137,7 +137,6 @@ square* initializeSquares(int SQUARE_COUNT){
   int s = 0;
   int s_speedx = 0;
   int s_speedy = 0;
-  int s_color = 0;
 
   int k = 0;
   while(k < selfinit_squares) {
@@ -151,12 +150,11 @@ square* initializeSquares(int SQUARE_COUNT){
     scanf("%d",&s_speedx);
     printf("speedy = ");
     scanf("%d",&s_speedy);
-    printf("color = ");
-    scanf("%d",&s_color);
+
 
     int table_size = 0;
 
-    square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy, .color = s_color};
+    square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy, .color = k % 4};
 
     // Check if the coordinates are in the bounds of the grid
     if(s_x + SQUARE_WIDTH <= SIZE_X && s_y + SQUARE_WIDTH <= SIZE_Y) {
@@ -185,7 +183,7 @@ square* initializeSquares(int SQUARE_COUNT){
                .y = rand()%(SIZE_Y - SQUARE_WIDTH),
                .speedx = rand()% 3 -1,
                  .speedy = rand()%3 -1,
-                 .color = rand()%4
+                 .color = selfinit_squares % 4
                 };
 
     for(int j = 0; j < selfinit_squares; j++){
