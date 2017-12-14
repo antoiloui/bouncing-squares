@@ -121,12 +121,11 @@ void setval( int sid, int semnum, int value){
 
 void setall(int sid,ushort value){
     union semun semopts;
-    int cntr;
     
     int members = get_member_count(sid);
     ushort myArray[members];
     
-    for(cntr=0; cntr<members; cntr++){
+    for(int cntr=0; cntr<members; cntr++){
         myArray[cntr] = value;
     }
 
