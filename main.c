@@ -18,7 +18,7 @@
 
 /************************************PROTOTYPES****************************************************/
 int hasIntersection(square a, square b);  //Returns 1 if the two squares intersect and 0 otherwise
-square* initializeSquares(square* squares_table,int SQUARE_COUNT);
+void initializeSquares(square* squares_table,int SQUARE_COUNT);
 
 
 /*****************************************PROCESSES**********************************************/
@@ -76,7 +76,6 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
       update_output(table_of_pixels);
       //Wait a bit
       usleep(5000);
-
     
   }
 }
@@ -124,7 +123,7 @@ int hasIntersection(square a, square b){
 
 
 
-square* initializeSquares(square* squares_table,int SQUARE_COUNT){
+void initializeSquares(square* squares_table,int SQUARE_COUNT){
   
   // Initialising squares by user and randomly
   int selfinit_squares = 0;
@@ -137,8 +136,6 @@ square* initializeSquares(square* squares_table,int SQUARE_COUNT){
     else
       break;
   }
-
-  square squares_table[SQUARE_COUNT];        //To store position and velocities of squares
 
   int s_x = 0;
   int s_y = 0;
@@ -224,7 +221,7 @@ int main(int argc, char** argv){
 	scanf("%d", &SQUARE_COUNT);
 
 	//Initialize SQUARE_COUNT number of squares
-	square* squares_table;
+	square* squares_table[SQUARE_COUNT];
 	initializeSquares(squares_table,SQUARE_COUNT);
 
 	key_t key_sem_workers, key_sem_access, key_sem_posUpdated;
