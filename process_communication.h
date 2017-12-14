@@ -91,9 +91,9 @@ void createsem(int *sid, key_t key, int members);
 int getval(int sid, int member);
 void setAll(int sid,ushort value);
 void setval(int sid, int semnum, int value);
-void writeshm(int shmid, point *segptr, char *text);
+point writeshm(point* segptr, int shmid, char *text);
 //void changemode(int shmid, char *mode); 
-void removeshm(int shmid);
-void readshm(point* segptr,int index);
+point removeshm(int shmid);
+int readshm(point* segptr,int index);
 
 #endif

@@ -186,11 +186,11 @@ void setall(int sid,ushort value){
 }
 
 
-writeshm(point* segptr,int index, int value){
+point writeshm(point* segptr,int index, int value){
         segptr[index] = value;
 }
 
-int readshm(point* segptr, int index){
+point readshm(point* segptr, int index){
     return segptr[index];
 }
 

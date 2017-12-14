@@ -210,10 +210,10 @@ worker(int id, point* segptr, int workers_semid, int access_semid, int speedx, i
 		next_pos.x = current_pos.x + speedx;
 		next_pos.y = current_pos.y + speedy;
 		//Update position
-		writeshm(segptr,id);
+		writeshm(segptr,id,next_pos);
 		unlocksem(access_semid,0);//signal(accessPositionTable)
 
-		unlocksem(posUpdated_semid,0) //has updated it's position
+		unlocksem(posUpdated_semid,0); //has updated it's position
   		locksem(workers_semid,id); // Wait for the master process
 
 	}
