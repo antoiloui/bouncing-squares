@@ -62,7 +62,7 @@ void master_process(point* segptr, int workers_semid, int access_semid, int posU
       for(j = 0; j < SQUARE_WIDTH; j++){
           for(k = 0; k < SQUARE_WIDTH; k++){
             point position = readshm(segptr,id);
-              table_of_pixels[position.x+j][position.y+k] = squares_table[id-1].color;
+            table_of_pixels[position.x+j][position.y+k] = id % 4;
           }
         }
     }
