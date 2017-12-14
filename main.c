@@ -16,8 +16,12 @@
 #include "constants.h"
 #include "output.h"
 
-
+/************************************PROTOTYPES****************************************************/
 int hasIntersection(square a, square b);  //Returns 1 if the two squares intersect and 0 otherwise
+square* initializeSquares(int SQUARE_COUNT);
+
+
+/*****************************************PROCESSES**********************************************/
 
 /*
 void control_process(){
@@ -77,10 +81,10 @@ master_process(point* segptr, int workers_semid, int access_semid, int posUpdate
 }
 
 
-void worker(int id, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
+worker(int id, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
     point next_pos;
     point current_pos;
-    int finsish = 0;
+    int finish = 0;
 
   while((finish = readshm(segptr,0).x) != 1) {
 
@@ -102,7 +106,7 @@ void worker(int id, point* segptr, int workers_semid, int access_semid, int posU
 
 
 
-
+/******************************************FUNCTIONS***************************************************/
 
 //Do two squares have an intersection?
 int hasIntersection(square a, square b){
@@ -203,7 +207,7 @@ square* initializeSquares(int SQUARE_COUNT){
 }
 
 
-
+/********************************************************MAIN******************************************/
 
 int main(int argc, char** argv){
 
