@@ -83,6 +83,7 @@ union semun {
 
 
 //Locks semaphore 'member' with in sempahore set with id "sid"
+unsigned short get_member_count(int sid);
 void locksem(int sid, int member);
 void unlocksem(int sid, int member);
 unsigned short get_member_count(int sid);
