@@ -27,7 +27,7 @@ void control_process(){
 }
 */
 
-void master_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid) {
+master_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid) {
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
   int temp;
@@ -286,7 +286,7 @@ int main(int argc, char** argv){
 			//This is a son
 			int speedx = squares_table[id-1].speedx;
 			int speedy = squares_table[id-1].speedy;
-			worker(id,segptr,speedx,speedy);
+			worker(id,segptr,workers_semid,access_semid,posUpdated_semid,speedx,speedy);
 			cntr = SQUARE_COUNT;
 		}
 		else
@@ -304,12 +304,12 @@ int main(int argc, char** argv){
 
   	//Put the squares position into shared memory
   	for(id = 1; id <= SQUARE_COUNT; id++){
-  		point position = {.x = squares_table[id-1].x, .y = squares_table[id-1].y}
+  		point position = {.x = squares_table[id-1].x, .y = squares_table[id-1].y};
 		writeshm(segptr,id,position);
 	}
 
 	point finish = {.x = 0,.y = 0};
-	writeshm(segptr,0,finish) //finish = 0;
+	writeshm(segptr,0,finish); //finish = 0;
 
 	//We enter the master_process code
 	master_process(segptr,workers_semid,access_semid,posUpdated_semid);
