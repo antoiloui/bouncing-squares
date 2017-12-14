@@ -32,6 +32,7 @@ void control_process(){
 */
 
 master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
+
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
   int finish = 0;
@@ -81,11 +82,9 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 }
 
 
-<<<<<<< HEAD
-void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
-=======
+
 worker(int id, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
->>>>>>> 016911d9a2558022c2f10b7bf6c75136cef1a435
+
     point next_pos;
     point current_pos;
     int finish = 0;
@@ -143,7 +142,6 @@ square* initializeSquares(square* squares_table,int SQUARE_COUNT){
 
   int s_x = 0;
   int s_y = 0;
-  int s = 0;
   int s_speedx = 0;
   int s_speedy = 0;
 
@@ -207,7 +205,7 @@ square* initializeSquares(square* squares_table,int SQUARE_COUNT){
     }
   }
 
-  return squares_table;
+  return;
 }
 
 
