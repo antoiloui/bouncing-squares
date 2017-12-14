@@ -14,7 +14,6 @@
 #include "output.h"
 
 
-//Method signatures
 
 
 int hasIntersection(square a, square b);                        //Returns 1 if the two squares intersect and 0 otherwise

@@ -59,6 +59,15 @@ union semun {
         struct seminfo *__buf;                /* buffer for IPC_INFO */ 
 }; 
 
+unsigned short get_member_count(int sid){
+        union semun semopts;
+        struct semid_ds mysemds;
+
+        semopts.buf = &mysemds;
+
+        /* Return number of members in the semaphore set */
+        return(semopts.buf->sem_nsems);
+}
 
 
 
@@ -120,15 +129,6 @@ void unlocksem(int sid, int member){
 
 
 
-unsigned short get_member_count(int sid){
-        union semun semopts;
-        struct semid_ds mysemds;
-
-        semopts.buf = &mysemds;
-
-        /* Return number of members in the semaphore set */
-        return(semopts.buf->sem_nsems);
-}
 
 
 void createsem(int *sid, key_t key, int members){
@@ -197,7 +197,7 @@ int readshm(point* segptr, int index){
     return segptr[index];
 }
 
-removeshm(int shmid){
+void removeshm(int shmid){
         shmctl(shmid, IPC_RMID, 0);
         printf("Shared memory segment marked for deletion\n");
 }
