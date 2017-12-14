@@ -1,0 +1,80 @@
+What to research :
+
+main.c(nearly everything in khbit() ):
+	-atoi(argv[1])
+		Converts string to integer
+
+	-termios.h and it's structure
+		http://pubs.opengroup.org/onlinepubs/7908799/xsh/termios.h.html
+
+		The c_lflag field of the argument structure is used to control 				various terminal functions:
+
+		-ECHO
+			Enable echo.
+		-ICANON
+			Canonical input (erase and kill processing).
+
+	-tcgetattr(STDIN_FILENO,&oldt)
+		http://pubs.opengroup.org/onlinepubs/7908799/xsh/tcgetattr.html
+			
+		int tcgetattr(int fildes, struct termios *termios_p);
+
+
+
+	-newt.c_lflag &= ~(ICANON | ECHO)
+		-ICANON
+			Canonical input (erase and kill processing).	
+
+	-tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+		http://pubs.opengroup.org/onlinepubs/7908799/xsh/tcsetattr.html
+
+		int tcsetattr(int fildes, int optional_actions,const struct termios *termios_p);
+
+		The tcsetattr() function sets the parameters associated with the terminal referred to by the open file descriptor fildes (an open file descriptor 			associated with a terminal) from the termios structure referenced by termios_p as follows.
+		The tcsetattr() function will return successfully if it was able to perform any of the requested actions [...].
+		[...]If no part of the request can be honoured, it will return -1 [...]
+
+		If optional_actions is TCSANOW, the change will occur immediately
+		
+
+	-oldf = fcntl(STDIN_FILENO, F_GETFL, 0); and -fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+		http://pubs.opengroup.org/onlinepubs/009695399/functions/fcntl.html
+
+		int fcntl(int fildes, int cmd, ...);
+		
+		The fcntl() function shall perform the operations described below on open files. The fildes argument is a file descriptor.
+
+		F_GETFL
+			Get the file status flags and file access modes, defined in <fcntl.h>, for the file description associated with fildes. The file access modes 				can be 	extracted from the return value using the mask O_ACCMODE, which is defined in <fcntl.h>. File status flags and file access modes are 				associated with the file description and do not affect other file descriptors that refer to the same file with different open file 					descriptions.
+	
+
+
+	
+		F_SETFL
+			Set the file status flags, defined in <fcntl.h>, for the file description associated with fildes from the corresponding bits in the third 				argument, arg, taken as type int. Bits corresponding to the file access mode and the file creation flags, as defined in <fcntl.h>, that are set 			in arg shall be ignored. If any bits in arg other than those mentioned here are changed by the application, the result is unspecified.
+
+		http://pubs.opengroup.org/onlinepubs/7908799/xsh/open.html
+
+		O_NONBLOCK
+			When opening a FIFO with O_RDONLY or O_WRONLY set: If O_NONBLOCK is set:
+			An open() for reading only will return without delay. An open() for writing only will return an error if no process currently has the file open 			for reading.
+
+			If O_NONBLOCK is clear:
+
+			An open() for reading only will block the calling thread until a thread opens the file for writing. An open() for writing only will block the 			calling thread until a thread opens the file for reading.
+			When opening a block special or character special file that supports non-blocking opens:
+
+
+			If O_NONBLOCK is set:
+
+			The open() function will return without blocking for the device to be ready or available. Subsequent behaviour of the device is device-			specific.
+
+
+			If O_NONBLOCK is clear:
+
+			The open() function will block the calling thread until the device is ready or available before returning.
+			Otherwise, the behaviour of O_NONBLOCK is unspecified.
+	
+
+	-ungetc(ch, stdin);
