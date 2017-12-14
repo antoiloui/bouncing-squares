@@ -183,12 +183,13 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
     srand(time(NULL));
 
-    square new_square = {.x = rand()%(SIZE_X - SQUARE_WIDTH),
-               .y = rand()%(SIZE_Y - SQUARE_WIDTH),
-               .speedx = rand()% 3 -1,
-                 .speedy = rand()%3 -1,
-                 .color = selfinit_squares % 4
-                };
+    square new_square = {
+    	.x = rand()%(SIZE_X - SQUARE_WIDTH),
+        .y = rand()%(SIZE_Y - SQUARE_WIDTH),
+        .speedx = rand()% 3 -1,
+        .speedy = rand()%3 -1,
+        .color = selfinit_squares % 4
+	};
 
     for(int j = 0; j < selfinit_squares; j++){
        // Check intersection with other squares
