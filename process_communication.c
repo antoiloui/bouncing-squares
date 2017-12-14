@@ -9,7 +9,7 @@
 #include <time.h>
 #include<stdbool.h>
 
-#include "process_communications.h"
+#include "process_communication.h"
 
 
 unsigned short get_member_count(int sid){
