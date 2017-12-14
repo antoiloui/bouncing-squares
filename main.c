@@ -17,12 +17,193 @@
 #include "output.h"
 
 
+int hasIntersection(square a, square b);  //Returns 1 if the two squares intersect and 0 otherwise
+
+/*
+void control_process(){
+  while(getChar()){}
+  removeshm(int shmid);
+  removeshm(int shmid)
+}
+*/
+
+void master_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid) {
+  int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
+
+  int temp;
+  point finish;
+  int id,j,k;
+  //As long as the user doesn't quit
+  while((finish = readshm(segptr,0).x) != 1) {
+    
+      //Display
+      printf("\nEnter next cycle\n");
+      printf("Compute next table\n");
+
+    for(int id = 1; id <= SQUARE_COUNT; id++){
+      unlocksem(workers_semid,id);
+    }
+
+    unlocksem(access_semid,0); //Give access to the square table
 
 
-int hasIntersection(square a, square b);                        //Returns 1 if the two squares intersect and 0 otherwise
+    //Wait before all workers have updated their position
+    for(int cntr = 0; cntr < SQUARE_COUNT ; cntr++) {
+      locksem(posUpdated_semid,0);
+    }
+
+    //Updating the table_of_pixels
+      for(j = 0; j < SIZE_X; j++){
+          for(k = 0; k < SIZE_Y; k++){
+         table_of_pixels[j][k] = 0;
+        }
+      }
+    for(id = 1; i <= SQUARE_COUNT; id++){
+      for(j = 0; j < SQUARE_WIDTH; j++){
+          for(k = 0; k < SQUARE_WIDTH; k++){
+            point position = readshm(segptr,id);
+              table_of_pixels[position.x+j][position.y+k] = squares_table[id-1].color;
+          }
+        }
+    }
+
+    //Apply the change on SDL display
+      update_output(table_of_pixels);
+      //Wait a bit
+      usleep(5000);
+
+    
+  }
+}
 
 
-//Variables for semaphores and shared memory
+worker(int id, point* segptr, int workers_semid, int access_semid, int speedx, int speedy){
+    point next_pos;
+    point current_pos;
+
+  while((finish = readshm(segptr,0).x) != 1) {
+
+    locksem(access_semid,0); //wait(accessPositionTable)
+    //Get current position
+    current_pos = readshm(segptr,id);
+    //Compute next position
+    next_pos.x = current_pos.x + speedx;
+    next_pos.y = current_pos.y + speedy;
+    //Update position
+    writeshm(segptr,id,next_pos);
+    unlocksem(access_semid,0);//signal(accessPositionTable)
+
+    unlocksem(posUpdated_semid,0); //has updated it's position
+      locksem(workers_semid,id); // Wait for the master process
+
+  }
+}
+
+
+
+
+
+//Do two squares have an intersection?
+int hasIntersection(square a, square b){
+  int rc = 0;
+  
+  if(a.y < b.y+SQUARE_WIDTH && a.y+SQUARE_WIDTH > b.y &&
+     a.x < b.x+SQUARE_WIDTH && a.x+SQUARE_WIDTH > b.x)
+    rc = 1;
+  return rc;
+}
+
+
+
+
+square* initializeSquares(int SQUARE_COUNT){
+  
+  // Initialising squares by user and randomly
+  int selfinit_squares = 0;
+  while(true){
+    printf("How many squares would you like to initalize yourself ?\n");
+    scanf("%d",&selfinit_squares);
+
+    if(selfinit_squares > SQUARE_COUNT)
+      printf("You can't initialise more than the number of squares, please try again\n");
+    else
+      break;
+  }
+
+  square squares_table[SQUARE_COUNT];        //To store position and velocities of squares
+
+  int s_x = 0;
+  int s_y = 0;
+  int s = 0;
+  int s_speedx = 0;
+  int s_speedy = 0;
+  int s_color = 0;
+
+  int k = 0;
+  while(k < selfinit_squares) {
+    printf("Square number %d \n",k+1);
+    printf("Please introduce values for the following variables \n");
+    printf("x = ");
+    scanf("%d",&s_x);
+    printf("y = ");
+    scanf("%d",&s_y);
+    printf("speedx = ");
+    scanf("%d",&s_speedx);
+    printf("speedy = ");
+    scanf("%d",&s_speedy);
+    printf("color = ");
+    scanf("%d",&s_color);
+
+    int table_size = 0;
+
+    square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy, .color = s_color};
+
+    // Check if the coordinates are in the bounds of the grid
+    if(s_x + SQUARE_WIDTH <= SIZE_X && s_y + SQUARE_WIDTH <= SIZE_Y) {
+      for(int j = 0; j < table_size; j++){
+        if(hasIntersection(new_square, squares_table[j])) { // Check intersection with other squares
+          printf("Squares overlap, please enter new value\n");
+          continue;
+        }
+      }
+    }else{
+      printf("Square out of bounds, please enter new values\n");
+      continue;
+    }
+
+    squares_table[k] = new_square;
+    table_size++;
+    k++;
+  }
+
+  // Randomly generate the (remaining) squares
+  while(selfinit_squares < SQUARE_COUNT) {
+
+    srand(time(NULL));
+
+    square new_square = {.x = rand()%(SIZE_X - SQUARE_WIDTH),
+               .y = rand()%(SIZE_Y - SQUARE_WIDTH),
+               .speedx = rand()% 3 -1,
+                 .speedy = rand()%3 -1,
+                 .color = rand()%4
+                };
+
+    for(int j = 0; j < selfinit_squares; j++){
+       // Check intersection with other squares
+      if(hasIntersection(new_square, squares_table[j])){
+        break;
+      }
+      else {
+        squares_table[selfinit_squares] = new_square;
+        selfinit_squares++;
+      }
+    }
+  }
+
+  return squares_table;
+}
+
+
 
 
 int main(int argc, char** argv){
@@ -138,6 +319,7 @@ int main(int argc, char** argv){
 	
 	return 1;
 }
+<<<<<<< HEAD
 
 
 /*
@@ -315,3 +497,5 @@ void initializeSquares(square* squares_table, int SQUARE_COUNT){
 		}
 	}
 }
+=======
+>>>>>>> e43dfa5948827a28273e30e4e0118e9f42b0957f
