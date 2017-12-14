@@ -8,60 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include<stdbool.h>
-
-
-//void locksem(int sid, int member); //Remored IPC_NO_WAIT
-//void unlocksem(int sid, int member); //Remored IPC_NO_WAIT
-//void createsem(int *sid, key_t key, int members);
-//int getval(int sid, int member);
-
-
-
-
-/*
-
-// One semaphore structure for each semaphore in the system. 
-struct sem {
-        short   sempid;         // pid of last operation 
-        ushort  semval;         // current value 
-        ushort  semncnt;        // num procs awaiting increase in semval 
-        ushort  semzcnt;        // num procs awaiting semval = 0 
-};
-
-// semop system call takes an array of these 
-struct sembuf {
-    ushort  sem_num;        // semaphore index in array 
-    short   sem_op;         // semaphore operation 
-    short   sem_flg;        // operation flags 
-};
-
-
-union semun {
-    int              val;    // Valeur pour SETVAL 
-    struct semid_ds *buf;    // Tampon pour IPC_STAT, IPC_SET
-    unsigned short  *array;  // Tableau pour GETALL, SETALL
-    struct seminfo  *__buf;  // Tampon pour IPC_INFO
-                             //   (spécifique à Linux) 
-};
-
-// arg for semctl system calls. 
-union semun {
-        int val;                // value for SETVAL 
-        struct semid_ds *buf;   // buffer for IPC_STAT & IPC_SET 
-        ushort *array;          // array for GETALL & SETALL 
-        struct seminfo *__buf;  // buffer for IPC_INFO 
-        void *__pad;
-};
-
-*/
-
-union semun { 
-        int val;                        /* value for SETVAL */ 
-        struct semid_ds *buf;                /* buffer for IPC_STAT, IPC_SET */ 
-        unsigned short int *array;         /* array for GETALL, SETALL */ 
-        struct seminfo *__buf;                /* buffer for IPC_INFO */ 
-}; 
-
+#include "process_communication.h"
 
 
 

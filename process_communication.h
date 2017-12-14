@@ -1,4 +1,4 @@
-##ifndef PROCESS_COMMUNICATION
+#ifndef PROCESS_COMMUNICATION
 #define PROCESS_COMMUNICATION 
 
 
@@ -14,15 +14,7 @@
 #include<stdbool.h>
 
 
-//void locksem(int sid, int member); //Remored IPC_NO_WAIT
-//void unlocksem(int sid, int member); //Remored IPC_NO_WAIT
-//void createsem(int *sid, key_t key, int members);
-//int getval(int sid, int member);
-
-
-
-
-/*
+/************************************************************************************
 
 // One semaphore structure for each semaphore in the system. 
 struct sem {
@@ -57,7 +49,26 @@ union semun {
         void *__pad;
 };
 
-*/
+******************************************************************************************/
+
+
+//Custom structure
+struct square_t
+{
+  int x;
+  int y;
+  int color;
+  int speedx;
+  int speedy;
+};
+typedef struct square_t square;
+
+struct point_t
+{
+    int x;
+    int y;
+};
+typedef struct point_t point;
 
 union semun { 
         int val;                        /* value for SETVAL */ 

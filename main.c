@@ -13,23 +13,6 @@
 #include "constants.h"
 #include "output.h"
 
-//Custom structure
-struct square_t
-{
-  int x;
-  int y;
-  int color;
-  int speedx;
-  int speedy;
-};
-typedef struct square_t square;
-
-struct point_t
-{
-	int x;
-	int y;
-};
-typedef struct point_t point;
 
 //Method signatures
 
