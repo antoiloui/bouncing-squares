@@ -45,7 +45,8 @@ int main(int argc, char** argv){
 	scanf("%d", &SQUARE_COUNT);
 
 	//Initialize SQUARE_COUNT number of squares
-	square* squares_table = initializeSquares(SQUARE_COUNT);
+	square* squares_table;
+	initializeSquares(squares_table,SQUARE_COUNT);
 
 	key_t key_sem_workers, key_sem_access; key_sem_posUpdated;
 	pid_t pid;
@@ -150,7 +151,6 @@ void control_process(){
 void master_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid) {
 	int table_of_pixels[SIZE_X][SIZE_Y];	//Will store the states of the pixels
 
-	int temp;
 	point finish;
 	int id,j,k;
 	//As long as the user doesn't quit
@@ -197,10 +197,10 @@ void master_process(point* segptr, int workers_semid, int access_semid, int posU
 }
 
 
-worker(int id, point* segptr, int workers_semid, int access_semid, int speedx, int speedy){
+worker(int id, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
 		point next_pos;
 		point current_pos;
-
+		point finish;
   while((finish = readshm(segptr,0).x) != 1) {
 
 		locksem(access_semid,0); //wait(accessPositionTable)
@@ -233,7 +233,7 @@ int hasIntersection(square a, square b){
   return rc;
 }
 
-square* initializeSquares(int SQUARE_COUNT){
+void initializeSquares(square* squares_table, int SQUARE_COUNT){
 	
 	// Initialising squares by user and randomly
 	int selfinit_squares = 0;
@@ -247,11 +247,9 @@ square* initializeSquares(int SQUARE_COUNT){
 			break;
 	}
 
-	square squares_table[SQUARE_COUNT];        //To store position and velocities of squares
 
 	int s_x = 0;
 	int s_y = 0;
-	int s = 0;
 	int s_speedx = 0;
 	int s_speedy = 0;
 	int s_color = 0;
@@ -316,6 +314,4 @@ square* initializeSquares(int SQUARE_COUNT){
 			}
 		}
 	}
-
-	return squares_table;
 }
