@@ -221,7 +221,7 @@ int main(int argc, char** argv){
 	scanf("%d", &SQUARE_COUNT);
 
 	//Initialize SQUARE_COUNT number of squares
-	square* squares_table[SQUARE_COUNT];
+	square squares_table[SQUARE_COUNT];
 	initializeSquares(squares_table,SQUARE_COUNT);
 
 	key_t key_sem_workers, key_sem_access, key_sem_posUpdated;
