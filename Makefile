@@ -2,7 +2,7 @@
 
 CFLAGS = `sdl-config --cflags --libs` --std=c99 --pedantic -Wall -Wmissing-prototypes -g
 
-OBJS = process_communication.o ourmain.o output.o #Objects to build
+OBJS = process_communication.o main.o output.o #Objects to build
 TARGET = main       #Target executable name
 
 $(TARGET): $(OBJS)
