@@ -123,7 +123,7 @@ void setall(int sid,ushort value){
     union semun semopts;
     int cntr;
     
-    members = get_member_count(sid);
+    int members = get_member_count(sid);
     ushort myArray[members];
     
     for(cntr=0; cntr<members; cntr++){
@@ -132,7 +132,7 @@ void setall(int sid,ushort value){
 
     semopts.array = myArray;
     
-    semctl(sid, cntr, SETALL, semopts);    
+    semctl(sid,semnum, SETALL, semopts);    
 }
 
 

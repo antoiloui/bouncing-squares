@@ -93,7 +93,7 @@ void setAll(int sid,ushort value);
 void setval(int sid, int semnum, int value);
 point writeshm(point* segptr, int shmid, char *text);
 //void changemode(int shmid, char *mode); 
-point removeshm(int shmid);
-int readshm(point* segptr,int index);
+int removeshm(int shmid);
+point readshm(point* segptr,int index);
 
 #endif
