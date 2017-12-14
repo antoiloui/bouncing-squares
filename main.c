@@ -319,7 +319,6 @@ int main(int argc, char** argv){
 	
 	return 1;
 }
-<<<<<<< HEAD
 
 
 /*
@@ -497,5 +496,3 @@ void initializeSquares(square* squares_table, int SQUARE_COUNT){
 		}
 	}
 }
-=======
->>>>>>> e43dfa5948827a28273e30e4e0118e9f42b0957f
