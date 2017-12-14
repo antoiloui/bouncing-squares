@@ -18,7 +18,7 @@
 
 /************************************PROTOTYPES****************************************************/
 int hasIntersection(square a, square b);  //Returns 1 if the two squares intersect and 0 otherwise
-square* initializeSquares(int SQUARE_COUNT);
+square* initializeSquares(square* squares_table,int SQUARE_COUNT);
 
 
 /*****************************************PROCESSES**********************************************/
@@ -125,7 +125,7 @@ int hasIntersection(square a, square b){
 
 
 
-square* initializeSquares(int SQUARE_COUNT){
+square* initializeSquares(square* squares_table,int SQUARE_COUNT){
   
   // Initialising squares by user and randomly
   int selfinit_squares = 0;
