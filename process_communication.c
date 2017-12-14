@@ -132,11 +132,11 @@ void setall(int sid,ushort value){
 
     semopts.array = myArray;
     
-    semctl(sid,semnum, SETALL, semopts);    
+    semctl(sid,0, SETALL, semopts);    
 }
 
 
-point writeshm(point* segptr,int index, int value){
+point writeshm(point* segptr,int index, point value){
         segptr[index] = value;
 }
 
