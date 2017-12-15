@@ -300,6 +300,7 @@ int main(int argc, char** argv){
 	for(int cntr = 0; cntr < SQUARE_COUNT; cntr++)
 	{
 		pid = fork();
+    printf("La faute est après le fork", );
 		if(pid < 0)
 		{
 			perror("Process creation failed");
