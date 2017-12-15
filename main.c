@@ -23,14 +23,26 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT);
 
 /*****************************************PROCESSES**********************************************/
 
+<<<<<<< HEAD
 /*
 void control_process(){
   while(getChar()){}
 
+=======
+control_process(){
+  char c;
+  int finish = 0;
+
+  while(c = getChar()){
+    if(putchar(c) == '\n')
+      finish.x = 1;
+      writeshm(segptr,0,finish);
+  }
+>>>>>>> e48565ffa7848b762395f9fc147ba953eb0a56eb
   removeshm(int shmid);
   removeshm(int shmid)
 }
-*/
+
 
 master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
 
@@ -91,6 +103,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
     point current_pos;
     int finish = 0;
 
+<<<<<<< HEAD
     while((finish = readshm(segptr,0).x) != 1) {
         printf("Worker %d is working", id);
         locksem(access_semid,0); //wait(accessPositionTable)
@@ -105,6 +118,22 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
         unlocksem(posUpdated_semid,0); //has updated it's position
         locksem(workers_semid,id); // Wait for the master process
+=======
+  while((finish = readshm(segptr,0).x) != 1) {
+
+    locksem(access_semid,0); //wait(accessPositionTable)
+    //Get current position
+    current_pos = readshm(segptr,id);
+    //Compute next position
+    next_pos.x = current_pos.x + speedx;
+    next_pos.y = current_pos.y + speedy;
+    //Update position
+    writeshm(segptr,id,next_pos);
+    unlocksem(access_semid,0);//signal(accessPositionTable)
+
+    unlocksem(posUpdated_semid,0); //has updated it's position
+    locksem(workers_semid,id); // Wait for the master process
+>>>>>>> e48565ffa7848b762395f9fc147ba953eb0a56eb
 
     }
 }
@@ -307,6 +336,7 @@ int main(int argc, char** argv){
 	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT; cntr++)
 	{
 		pid = fork();
+ 
 		if(pid < 0)
 		{
 			perror("Process creation failed");
@@ -318,7 +348,7 @@ int main(int argc, char** argv){
 			int speedx = squares_table[id-1].speedx;
 			int speedy = squares_table[id-1].speedy;
 			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,speedx,speedy);
-			cntr = SQUARE_COUNT;
+      cntr = SQUARE_COUNT;
 		}
 		else
 		{
@@ -351,13 +381,3 @@ int main(int argc, char** argv){
 	
 	return 0;
 }
-
-
-/*
-void control_process(){
-	while(getChar()){}
-	removeshm(int shmid);
-	removeshm(int shmid)
-}
-*/
-
