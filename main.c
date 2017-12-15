@@ -127,6 +127,15 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
   
   // Initialising squares by user and randomly
   int selfinit_squares = 0;
+  int table_size = 0;
+  int k = 0;
+
+  int s_x = 0;
+  int s_y = 0;
+  int s_speedx = 0;
+  int s_speedy = 0;
+
+  // Initialising squares by user and randomly
   while(true){
     printf("How many squares would you like to initalize yourself ?\n");
     scanf("%d",&selfinit_squares);
@@ -137,12 +146,6 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
       break;
   }
 
-  int s_x = 0;
-  int s_y = 0;
-  int s_speedx = 0;
-  int s_speedy = 0;
-
-  int k = 0;
   while(k < selfinit_squares) {
     printf("Square number %d \n",k+1);
     printf("Please introduce values for the following variables \n");
@@ -155,8 +158,6 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
     printf("speedy = ");
     scanf("%d",&s_speedy);
 
-
-    int table_size = 0;
 
     square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy, .color = k % 4};
 
@@ -176,10 +177,15 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
     squares_table[k] = new_square;
     table_size++;
     k++;
+
   }
 
+
+
+  k = selfinit_squares;
+
   // Randomly generate the (remaining) squares
-  while(selfinit_squares < SQUARE_COUNT) {
+  while(k < SQUARE_COUNT) {
 
     srand(time(NULL));
 
@@ -188,17 +194,24 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
         .y = rand()%(SIZE_Y - SQUARE_WIDTH),
         .speedx = rand()% 3 -1,
         .speedy = rand()%3 -1,
-        .color = selfinit_squares % 4
-	};
+        .color = k % 4
+	   };
 
-    for(int j = 0; j < selfinit_squares; j++){
+     // If no square initialised by the user we push the first random square
+     if(k == 0){
+        squares_table[0] = new_square;
+        k++;
+        continue;
+     }
+
+    for(int j = 0; j < k; j++){
        // Check intersection with other squares
       if(hasIntersection(new_square, squares_table[j])){
         break;
       }
       else {
-        squares_table[selfinit_squares] = new_square;
-        selfinit_squares++;
+        squares_table[k] = new_square;
+        k++;
       }
     }
   }
