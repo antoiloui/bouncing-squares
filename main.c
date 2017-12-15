@@ -237,6 +237,10 @@ int main(int argc, char** argv){
 	printf("How many squares running ?\n");
 	int SQUARE_COUNT = 0;
 	scanf("%d", &SQUARE_COUNT);
+    if(SQUARE_COUNT == 0){
+        printf("Can't have 0 squares\n");
+        return 0;
+    }
 
 	//Initialize SQUARE_COUNT number of squares
 	square squares_table[SQUARE_COUNT];
@@ -324,7 +328,6 @@ int main(int argc, char** argv){
 	//Initializes SDL and the colours
     init_output();
     printf("Initialized\n");
-
 
 
 	//We enter the master_process code
