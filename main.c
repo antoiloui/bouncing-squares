@@ -22,37 +22,29 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT);
 
 
 /*****************************************PROCESSES**********************************************/
-
-<<<<<<< HEAD
-/*
-void control_process(){
-  while(getChar()){}
-
-=======
 control_process(){
-  char c;
-  int finish = 0;
+    char c;
+    int finish = 0;
 
-  while(c = getChar()){
-    if(putchar(c) == '\n')
-      finish.x = 1;
-      writeshm(segptr,0,finish);
-  }
->>>>>>> e48565ffa7848b762395f9fc147ba953eb0a56eb
-  removeshm(int shmid);
-  removeshm(int shmid)
+    while(c = getChar()){
+        if(putchar(c) == '\n')
+            finish.x = 1;
+        writeshm(segptr,0,finish);
+    }
+    removeshm(int shmid);
+    removeshm(int shmid)
 }
 
 
 master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
 
-  int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
+    int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
-  int finish = 0;
-  int id,j,k;
-  
-      //As long as the user doesn't quit
-      while((finish = readshm(segptr,0).x) != 1) {
+    int finish = 0;
+    int id,j,k;
+
+    //As long as the user doesn't quit
+    while((finish = readshm(segptr,0).x) != 1) {
         
         //Display
         printf("\nEnter next cycle\n");
@@ -103,7 +95,6 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
     point current_pos;
     int finish = 0;
 
-<<<<<<< HEAD
     while((finish = readshm(segptr,0).x) != 1) {
         printf("Worker %d is working", id);
         locksem(access_semid,0); //wait(accessPositionTable)
@@ -118,23 +109,6 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
         unlocksem(posUpdated_semid,0); //has updated it's position
         locksem(workers_semid,id); // Wait for the master process
-=======
-  while((finish = readshm(segptr,0).x) != 1) {
-
-    locksem(access_semid,0); //wait(accessPositionTable)
-    //Get current position
-    current_pos = readshm(segptr,id);
-    //Compute next position
-    next_pos.x = current_pos.x + speedx;
-    next_pos.y = current_pos.y + speedy;
-    //Update position
-    writeshm(segptr,id,next_pos);
-    unlocksem(access_semid,0);//signal(accessPositionTable)
-
-    unlocksem(posUpdated_semid,0); //has updated it's position
-    locksem(workers_semid,id); // Wait for the master process
->>>>>>> e48565ffa7848b762395f9fc147ba953eb0a56eb
-
     }
 }
 
