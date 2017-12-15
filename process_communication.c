@@ -34,7 +34,7 @@ void locksem(int sid, int member){
         struct sembuf sem_lock={0, -1, 0}; //IPC_NO_WAIT removed
 
         if( member<0 || member>(get_member_count(sid)-1)){
-                fprintf(stderr, "sem %d of set %d out of range\n", member,sid);
+                fprintf(stderr, "(Lock)sem %d of set %d out of range\n", member,sid);
                 return;
         }
 
@@ -58,7 +58,7 @@ void unlocksem(int sid, int member){
         struct sembuf sem_unlock={member, 1,0}; //IPC_NO_WAIT removed
 
         if( member<0 || member>(get_member_count(sid)-1)){
-                fprintf(stderr, "sem %d of set %d out of range\n", member,sid);
+                fprintf(stderr, "(Unlock)sem %d of set %d out of range\n", member,sid);
                 return;
         }
 
@@ -113,22 +113,19 @@ void setval( int sid, int semnum, int value){
 }
 
 
+void setall(int sid, int value){
 /**********************************************************************************
 *
 **********************************************************************************/
 void setall(int sid,ushort value){
     union semun semopts;
-    
-    int members = get_member_count(sid);
-    ushort myArray[members];
-    
-    for(int cntr=0; cntr<members; cntr++){
-        myArray[cntr] = value;
-    }
+    semopts.val = value;
 
-    semopts.array = myArray;
-    
-    semctl(sid,0, SETALL, semopts);    
+    int members = get_member_count(sid);
+    for(int cntr=0; cntr<members; cntr++){
+        semctl(sid,cntr, SETVAL, semopts);    
+
+    }   
 }
 
 

@@ -25,6 +25,7 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT);
 
 /*****************************************PROCESSES**********************************************/
 
+
 control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, pid_t pid){
   char c;
   point finish;
@@ -55,12 +56,12 @@ control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_s
     kill(pid[i], SIGKILL);
   }
   
-}
 
 
 master_process(point* segptr,int SQUARE_COUNT, int* workers_semid, int access_semid, int posUpdated_semid) {
 
-  int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
+    int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
+
 
   int id,j,k;
   
@@ -75,35 +76,52 @@ master_process(point* segptr,int SQUARE_COUNT, int* workers_semid, int access_se
       unlocksem(workers_semid,id);
     }
 
-    unlocksem(access_semid,0); //Give access to the square table
+    int finish = 0;
+    int id,j,k;
 
+    //As long as the user doesn't quit
+    while((finish = readshm(segptr,0).x) != 1) {
+        
+        //Display
+        printf("\nEnter next cycle\n");
+        printf("Compute next table\n");
 
-    //Wait before all workers have updated their position
-    for(int cntr = 0; cntr < SQUARE_COUNT ; cntr++) {
-      locksem(posUpdated_semid,0);
-    }
-
-    //Updating the table_of_pixels
-      for(j = 0; j < SIZE_X; j++){
-          for(k = 0; k < SIZE_Y; k++){
-         table_of_pixels[j][k] = 0;
+        for(id = 1; id <= SQUARE_COUNT; id++){
+            printf("Process %d updated its position",id);
+            unlocksem(workers_semid,id);
         }
-      }
-    for(id = 1; id <= SQUARE_COUNT; id++){
-      for(j = 0; j < SQUARE_WIDTH; j++){
-          for(k = 0; k < SQUARE_WIDTH; k++){
-            point position = readshm(segptr,id);
-            table_of_pixels[position.x+j][position.y+k] = id % 4;
-          }
-        }
-    }
+>>>>>>> 68b1487ef788872ffc32e80ad2e3dcec30738fe6
 
-    //Apply the change on SDL display
-      update_output(table_of_pixels);
-      //Wait a bit
-      usleep(5000);
-    
-  }
+        unlocksem(access_semid,0); //Give access to the square table
+
+
+        //Wait before all workers have updated their position
+        for(int cntr = 0; cntr < SQUARE_COUNT ; cntr++) {
+            locksem(posUpdated_semid,0);
+        }
+
+        //Updating the table_of_pixels
+        for(j = 0; j < SIZE_X; j++){
+            for(k = 0; k < SIZE_Y; k++){
+                table_of_pixels[j][k] = 0;
+            }
+        }
+
+        for(id = 1; id <= SQUARE_COUNT; id++){
+            for(j = 0; j < SQUARE_WIDTH; j++){
+                for(k = 0; k < SQUARE_WIDTH; k++){
+                    point position = readshm(segptr,id);
+                    table_of_pixels[position.x+j][position.y+k] = id % 4;
+                }
+            }
+        }
+
+        //Apply the change on SDL display
+        update_output(table_of_pixels);
+        //Wait a bit
+        usleep(15000);
+        
+    }
 }
 
 
@@ -113,6 +131,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
     point next_pos;
     point current_pos;
 
+<<<<<<< HEAD
   while(readshm(segptr,0).x != 1) {
 
     locksem(access_semid,0); //wait(accessPositionTable)
@@ -129,6 +148,23 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
     locksem(workers_semid,id); // Wait for the master process
 
   }
+=======
+    while((finish = readshm(segptr,0).x) != 1) {
+        printf("Worker %d is working", id);
+        locksem(access_semid,0); //wait(accessPositionTable)
+        //Get current position
+        current_pos = readshm(segptr,id);
+        //Compute next position
+        next_pos.x = current_pos.x + speedx;
+        next_pos.y = current_pos.y + speedy;
+        //Update position
+        writeshm(segptr,id,next_pos);
+        unlocksem(access_semid,0);//signal(accessPositionTable)
+
+        unlocksem(posUpdated_semid,0); //has updated it's position
+        locksem(workers_semid,id); // Wait for the master process
+    }
+>>>>>>> 68b1487ef788872ffc32e80ad2e3dcec30738fe6
 }
 
 
@@ -137,12 +173,12 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
 //Do two squares have an intersection?
 int hasIntersection(square a, square b){
-  int rc = 0;
+    int rc = 0;
   
-  if(a.y < b.y+SQUARE_WIDTH && a.y+SQUARE_WIDTH > b.y &&
-     a.x < b.x+SQUARE_WIDTH && a.x+SQUARE_WIDTH > b.x)
-    rc = 1;
-  return rc;
+    if(a.y < b.y+SQUARE_WIDTH && a.y+SQUARE_WIDTH > b.y &&
+        a.x < b.x+SQUARE_WIDTH && a.x+SQUARE_WIDTH > b.x)
+        rc = 1;
+    return rc;
 }
 
 
@@ -150,96 +186,96 @@ int hasIntersection(square a, square b){
 
 void initializeSquares(square* squares_table,int SQUARE_COUNT){
   
-  // Initialising squares by user and randomly
-  int selfinit_squares = 0;
-  int table_size = 0;
-  int k = 0;
+    // Initialising squares by user and randomly
+    int selfinit_squares = 0;
+    int table_size = 0;
+    int k = 0;
 
-  int s_x = 0;
-  int s_y = 0;
-  int s_speedx = 0;
-  int s_speedy = 0;
+    int s_x = 0;
+    int s_y = 0;
+    int s_speedx = 0;
+    int s_speedy = 0;
 
-  // Initialising squares by user and randomly
-  while(true){
-    printf("How many squares would you like to initalize yourself ?\n");
-    scanf("%d",&selfinit_squares);
+    // Initialising squares by user and randomly
+    while(true){
+        printf("How many squares would you like to initalize yourself ?\n");
+        scanf("%d",&selfinit_squares);
 
-    if(selfinit_squares > SQUARE_COUNT)
-      printf("You can't initialise more than the number of squares, please try again\n");
-    else
-      break;
-  }
+        if(selfinit_squares > SQUARE_COUNT)
+            printf("You can't initialise more than the number of squares, please try again\n");
+        else
+            break;
+    }
 
-  while(k < selfinit_squares) {
-    printf("Square number %d \n",k+1);
-    printf("Please introduce values for the following variables \n");
-    printf("x = ");
-    scanf("%d",&s_x);
-    printf("y = ");
-    scanf("%d",&s_y);
-    printf("speedx = ");
-    scanf("%d",&s_speedx);
-    printf("speedy = ");
-    scanf("%d",&s_speedy);
+    while(k < selfinit_squares) {
+        printf("Square number %d \n",k+1);
+        printf("Please introduce values for the following variables \n");
+        printf("x = ");
+        scanf("%d",&s_x);
+        printf("y = ");
+        scanf("%d",&s_y);
+        printf("speedx = ");
+        scanf("%d",&s_speedx);
+        printf("speedy = ");
+        scanf("%d",&s_speedy);
 
 
-    square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy, .color = k % 4};
+        square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy, .color = k % 4};
 
-    // Check if the coordinates are in the bounds of the grid
-    if(s_x + SQUARE_WIDTH <= SIZE_X && s_y + SQUARE_WIDTH <= SIZE_Y) {
-      for(int j = 0; j < table_size; j++){
-        if(hasIntersection(new_square, squares_table[j])) { // Check intersection with other squares
-          printf("Squares overlap, please enter new value\n");
-          continue;
+        // Check if the coordinates are in the bounds of the grid
+        if(s_x + SQUARE_WIDTH <= SIZE_X && s_y + SQUARE_WIDTH <= SIZE_Y) {
+            for(int j = 0; j < table_size; j++){
+                if(hasIntersection(new_square, squares_table[j])) { // Check intersection with other squares
+                printf("Squares overlap, please enter new value\n");
+                    continue;
+                }
+            }
+        }else{
+            printf("Square out of bounds, please enter new values\n");
+            continue;
         }
-      }
-    }else{
-      printf("Square out of bounds, please enter new values\n");
-      continue;
-    }
 
-    squares_table[k] = new_square;
-    table_size++;
-    k++;
-
-  }
-
-
-
-  k = selfinit_squares;
-
-  // Randomly generate the (remaining) squares
-  while(k < SQUARE_COUNT) {
-
-    srand(time(NULL));
-
-    square new_square = {
-    	.x = rand()%(SIZE_X - SQUARE_WIDTH),
-        .y = rand()%(SIZE_Y - SQUARE_WIDTH),
-        .speedx = rand()% 3 -1,
-        .speedy = rand()%3 -1,
-        .color = k % 4
-	   };
-
-     // If no square initialised by the user we push the first random square
-     if(k == 0){
-        squares_table[0] = new_square;
-        k++;
-        continue;
-     }
-
-    for(int j = 0; j < k; j++){
-       // Check intersection with other squares
-      if(hasIntersection(new_square, squares_table[j])){
-        break;
-      }
-      else {
         squares_table[k] = new_square;
+        table_size++;
         k++;
-      }
+
     }
-  }
+
+
+
+    k = selfinit_squares;
+
+    // Randomly generate the (remaining) squares
+    while(k < SQUARE_COUNT) {
+
+        srand(time(NULL));
+
+        square new_square = {
+        	.x = rand()%(SIZE_X - SQUARE_WIDTH),
+            .y = rand()%(SIZE_Y - SQUARE_WIDTH),
+            .speedx = rand()% 3 -1,
+            .speedy = rand()%3 -1,
+            .color = k % 4
+    	   };
+
+        // If no square initialised by the user we push the first random square
+        if(k == 0){
+            squares_table[0] = new_square;
+            k++;
+            continue;
+        }
+
+        for(int j = 0; j < k; j++){
+            // Check intersection with other squares
+            if(hasIntersection(new_square, squares_table[j])){
+                break;
+            }
+            else {
+                squares_table[k] = new_square;
+                k++;
+            }
+        }
+    }
 
   return;
 }
@@ -318,15 +354,15 @@ int main(int argc, char** argv){
 
     //Put the squares position into shared memory
     for(id = 1; id <= SQUARE_COUNT; id++){
-      point position = {.x = squares_table[id-1].x, .y = squares_table[id-1].y};
-    writeshm(segptr,id,position);
-  }
+        point position = {.x = squares_table[id-1].x, .y = squares_table[id-1].y};
+        writeshm(segptr,id,position);
+    }
 
-  point finish = {.x = 0,.y = 0};
-  writeshm(segptr,0,finish); //finish = 0;
+    point finish = {.x = 0,.y = 0};
+    writeshm(segptr,0,finish); //finish = 0;
 
     //Creating SQUARE_COUNT workers
-	for(int cntr = 0; cntr < SQUARE_COUNT; cntr++)
+	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT; cntr++)
 	{
 		pid = fork();
  
@@ -350,9 +386,22 @@ int main(int argc, char** argv){
 		}
 	}   
 
+
+  int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
+
+    for(id = 1; id <= SQUARE_COUNT; id++){
+        for(int j = 0; j < SQUARE_WIDTH; j++){
+            for(int k = 0; k < SQUARE_WIDTH; k++){
+                point position = readshm(segptr,id);
+                table_of_pixels[position.x+j][position.y+k] = (id-1) % 4;
+            }
+        }
+    }
+
 	//Initializes SDL and the colours
     init_output();
     printf("Initialized\n");
+
 
 
 	//We enter the master_process code
@@ -361,5 +410,5 @@ int main(int argc, char** argv){
   control_process(SQUARE_COUNT+2, SQUARE_COUNT+1, SQUARE_COUNT);
 
 	
-	return 1;
+	return 0;
 }
