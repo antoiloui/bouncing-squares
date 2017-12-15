@@ -66,14 +66,14 @@ control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_s
   // Kill the child processes
   for(size_t i=0; i < NPROCESS+1 ;i++){
     kill(pid[i], SIGKILL);
+
   }
   
 
 
 master_process(point* segptr,int SQUARE_COUNT, int* workers_semid, int access_semid, int posUpdated_semid) {
 
-    int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
-
+  int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
   int id,j,k;
   
@@ -84,6 +84,7 @@ master_process(point* segptr,int SQUARE_COUNT, int* workers_semid, int access_se
       printf("\nEnter next cycle\n");
       printf("Compute next table\n");
 
+<<<<<<< HEAD
     for(int id = 1; id <= SQUARE_COUNT; id++){
       unlocksem(workers_semid,id);
     }
@@ -102,6 +103,11 @@ master_process(point* segptr,int SQUARE_COUNT, int* workers_semid, int access_se
             unlocksem(workers_semid,id);
         }
 >>>>>>> 68b1487ef788872ffc32e80ad2e3dcec30738fe6
+=======
+      for(int id = 1; id <= SQUARE_COUNT; id++){
+        unlocksem(workers_semid,id);
+      }
+>>>>>>> 19d242e20734532a574b88e0c9a5ed773193055b
 
         unlocksem(access_semid,0); //Give access to the square table
 
@@ -140,12 +146,11 @@ master_process(point* segptr,int SQUARE_COUNT, int* workers_semid, int access_se
 
 worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
 
-    point next_pos;
-    point current_pos;
+  point next_pos;
+  point current_pos;
 
-<<<<<<< HEAD
   while(readshm(segptr,0).x != 1) {
-
+    printf("Worker %d is working", id);
     locksem(access_semid,0); //wait(accessPositionTable)
     //Get current position
     current_pos = readshm(segptr,id);
@@ -160,6 +165,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
     locksem(workers_semid,id); // Wait for the master process
 
   }
+<<<<<<< HEAD
 =======
     while((finish = readshm(segptr,0).x) != 1) {
         printf("Worker %d is working\n", id);
@@ -178,6 +184,8 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
     }
 >>>>>>> 68b1487ef788872ffc32e80ad2e3dcec30738fe6
 }
+=======
+>>>>>>> 19d242e20734532a574b88e0c9a5ed773193055b
 
 
 
