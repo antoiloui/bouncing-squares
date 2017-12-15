@@ -22,9 +22,9 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT);
 
 
 /*****************************************PROCESSES**********************************************/
-control_process(){
+/*control_process(){
     char c;
-    int finish = 0;
+    point finish = 0;
 
     while(c = getChar()){
         if(putchar(c) == '\n')
@@ -33,7 +33,7 @@ control_process(){
     }
     removeshm(int shmid);
     removeshm(int shmid)
-}
+}*/
 
 
 master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
@@ -51,7 +51,6 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
         printf("Compute next table\n");
 
         for(id = 1; id <= SQUARE_COUNT; id++){
-            printf("Process %d updated its position",id);
             unlocksem(workers_semid,id);
         }
 
@@ -60,6 +59,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
         //Wait before all workers have updated their position
         for(int cntr = 0; cntr < SQUARE_COUNT ; cntr++) {
+            printf("Process %d updated its position",id);
             locksem(posUpdated_semid,0);
         }
 
@@ -96,7 +96,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
     int finish = 0;
 
     while((finish = readshm(segptr,0).x) != 1) {
-        printf("Worker %d is working", id);
+        printf("Worker %d is working\n", id);
         locksem(access_semid,0); //wait(accessPositionTable)
         //Get current position
         current_pos = readshm(segptr,id);

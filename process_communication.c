@@ -113,11 +113,11 @@ void setval( int sid, int semnum, int value){
 }
 
 
-void setall(int sid, int value){
+
 /**********************************************************************************
 *
 **********************************************************************************/
-void setall(int sid,ushort value){
+void setall(int sid,int value){
     union semun semopts;
     semopts.val = value;
 
