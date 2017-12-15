@@ -16,6 +16,8 @@
 #include "constants.h"
 #include "output.h"
 
+#define NPROCESS 3
+
 /************************************PROTOTYPES****************************************************/
 int hasIntersection(square a, square b);  //Returns 1 if the two squares intersect and 0 otherwise
 void initializeSquares(square* squares_table,int SQUARE_COUNT);
@@ -23,29 +25,47 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT);
 
 /*****************************************PROCESSES**********************************************/
 
-control_process(){
+control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, pid_t pid){
   char c;
-  int finish = 0;
+  point finish;
 
   while(c = getChar()){
     if(putchar(c) == '\n')
+      printf("Enter pressed, program exited.");
       finish.x = 1;
       writeshm(segptr,0,finish);
   }
-  removeshm(int shmid);
-  removeshm(int shmid)
+
+  //Close semaphores
+    removeshm(workers_semid);
+    removeshm(access_semid);
+    removeshm(posUpdated_semid);
+
+  // Close shared memory segments
+    for(size_t i=0; i < SQUARE_COUNT+1; i++){
+      removeshm(segptr[i]);
+    }
+  
+
+  // Close messages queues
+  
+
+  // Kill the child processes
+  for(size_t i=0; i < NPROCESS+1 ;i++){
+    kill(pid[i], SIGKILL);
+  }
+  
 }
 
 
-master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
+master_process(point* segptr,int SQUARE_COUNT, int* workers_semid, int access_semid, int posUpdated_semid) {
 
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
-  int finish = 0;
   int id,j,k;
   
   //As long as the user doesn't quit
-  while((finish = readshm(segptr,0).x) != 1) {
+  while(readshm(segptr,0).x != 1) {
     
       //Display
       printf("\nEnter next cycle\n");
@@ -92,9 +112,8 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
     point next_pos;
     point current_pos;
-    int finish = 0;
 
-  while((finish = readshm(segptr,0).x) != 1) {
+  while(readshm(segptr,0).x != 1) {
 
     locksem(access_semid,0); //wait(accessPositionTable)
     //Get current position
@@ -233,7 +252,7 @@ int main(int argc, char** argv){
 	int workers_semid;
 	int access_semid;
 	int posUpdated_semid;
-  	int  shmid;
+  int shmid;
 	key_t key_sem_workers, key_sem_access, key_sem_posUpdated;
 	key_t key_shm;
 	pid_t pid;
@@ -338,6 +357,8 @@ int main(int argc, char** argv){
 
 	//We enter the master_process code
 	master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid);
+
+  control_process(SQUARE_COUNT+2, SQUARE_COUNT+1, SQUARE_COUNT);
 
 	
 	return 1;
