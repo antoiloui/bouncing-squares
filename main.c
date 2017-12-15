@@ -312,7 +312,6 @@ int main(int argc, char** argv){
     printf("Initialized\n");
 
 
-
 	//We enter the master_process code
 	master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid);
 

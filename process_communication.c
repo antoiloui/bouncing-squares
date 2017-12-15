@@ -30,8 +30,7 @@ void locksem(int sid, int member){
         struct sembuf sem_lock={0, -1, 0}; //IPC_NO_WAIT removed
 
         if( member<0 || member>(get_member_count(sid)-1)){
-                fprintf(stderr,"There are %d semaphores in this set\n", get_member_count(sid));
-                fprintf(stderr, "semaphore member %d out of range\n", member);
+                fprintf(stderr, "sem %d of set %d out of range\n", member,sid);
                 return;
         }
 
@@ -40,18 +39,18 @@ void locksem(int sid, int member){
         sem_lock.sem_num = member;
         
         if((semop(sid, &sem_lock, 1)) == -1){
-                fprintf(stderr, "Lock failed\n");
+                fprintf(stderr, "Lock failed (sem %d of set %d)\n",member,sid);
                 exit(1);
         }
         else
-                printf("Semaphore resources decremented by one (locked)\n");
+                printf("Semaphore(sem %d of set %d) decr. by 1 (locked)\n",member,sid);
 }
 
 void unlocksem(int sid, int member){
         struct sembuf sem_unlock={member, 1,0}; //IPC_NO_WAIT removed
 
         if( member<0 || member>(get_member_count(sid)-1)){
-                fprintf(stderr, "semaphore member %d out of range\n", member);
+                fprintf(stderr, "sem %d of set %d out of range\n", member,sid);
                 return;
         }
 
@@ -59,11 +58,11 @@ void unlocksem(int sid, int member){
 
         /* Attempt to lock the semaphore set */
         if((semop(sid, &sem_unlock, 1)) == -1){
-                fprintf(stderr, "Unlock failed\n");
+                fprintf(stderr, "Unlock failed (sem %d of set %d)\n",member,sid);
                 exit(1);
         }
         else
-            printf("Semaphore resources incremented by one (unlocked)\n");
+            printf("Semaphore(sem %d of set %d) incr. by 1 (unlocked)\n",member,sid);
 
 }
 
