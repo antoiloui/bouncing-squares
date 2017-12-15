@@ -23,13 +23,19 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT);
 
 /*****************************************PROCESSES**********************************************/
 
-/*
-void control_process(){
-  while(getChar()){}
+control_process(){
+  char c;
+  int finish = 0;
+
+  while(c = getChar()){
+    if(putchar(c) == '\n')
+      finish.x = 1;
+      writeshm(segptr,0,finish);
+  }
   removeshm(int shmid);
   removeshm(int shmid)
 }
-*/
+
 
 master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
 
@@ -101,7 +107,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
     unlocksem(access_semid,0);//signal(accessPositionTable)
 
     unlocksem(posUpdated_semid,0); //has updated it's position
-      locksem(workers_semid,id); // Wait for the master process
+    locksem(workers_semid,id); // Wait for the master process
 
   }
 }
@@ -304,7 +310,7 @@ int main(int argc, char** argv){
 	for(int cntr = 0; cntr < SQUARE_COUNT; cntr++)
 	{
 		pid = fork();
-    printf("La faute est après le fork", );
+ 
 		if(pid < 0)
 		{
 			perror("Process creation failed");
@@ -316,7 +322,7 @@ int main(int argc, char** argv){
 			int speedx = squares_table[id-1].speedx;
 			int speedy = squares_table[id-1].speedy;
 			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,speedx,speedy);
-			cntr = SQUARE_COUNT;
+      cntr = SQUARE_COUNT;
 		}
 		else
 		{
@@ -336,13 +342,3 @@ int main(int argc, char** argv){
 	
 	return 1;
 }
-
-
-/*
-void control_process(){
-	while(getChar()){}
-	removeshm(int shmid);
-	removeshm(int shmid)
-}
-*/
-

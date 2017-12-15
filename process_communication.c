@@ -12,6 +12,9 @@
 #include "process_communication.h"
 
 
+/**********************************************************************************
+*
+**********************************************************************************/
 unsigned short get_member_count(int sid){
         union semun semopts;
         struct semid_ds mysemds;
@@ -23,8 +26,9 @@ unsigned short get_member_count(int sid){
 }
 
 
-
-//Locks semaphore 'member' with in sempahore set with id "sid"
+/**********************************************************************************
+*Locks semaphore 'member' with in sempahore set with id "sid"
+**********************************************************************************/
 void locksem(int sid, int member){
 
         struct sembuf sem_lock={0, -1, 0}; //IPC_NO_WAIT removed
@@ -46,6 +50,10 @@ void locksem(int sid, int member){
                 printf("Semaphore(sem %d of set %d) decr. by 1 (locked)\n",member,sid);
 }
 
+
+/**********************************************************************************
+*
+**********************************************************************************/
 void unlocksem(int sid, int member){
         struct sembuf sem_unlock={member, 1,0}; //IPC_NO_WAIT removed
 
@@ -67,9 +75,9 @@ void unlocksem(int sid, int member){
 }
 
 
-
-
-
+/**********************************************************************************
+*
+**********************************************************************************/
 void createsem(int *sid, key_t key, int members){
 
         printf("Attempting to create new semaphore set with %d members\n",
@@ -83,7 +91,9 @@ void createsem(int *sid, key_t key, int members){
 }
 
 
-
+/**********************************************************************************
+*
+**********************************************************************************/
 int getval(int sid, int member){
         int semval;
 
@@ -91,6 +101,10 @@ int getval(int sid, int member){
         return(semval);
 }
 
+
+/**********************************************************************************
+*
+**********************************************************************************/
 void setval( int sid, int semnum, int value){
         union semun semopts;    
 
@@ -99,6 +113,9 @@ void setval( int sid, int semnum, int value){
 }
 
 
+/**********************************************************************************
+*
+**********************************************************************************/
 void setall(int sid,ushort value){
     union semun semopts;
     
@@ -115,15 +132,48 @@ void setall(int sid,ushort value){
 }
 
 
-point writeshm(point* segptr,int index, point value){
-        return segptr[index] = value;
+/**********************************************************************************
+*
+**********************************************************************************/
+void writeshm(point* segptr,int index, point value){
+    segptr[index] = value;
 }
 
+
+/**********************************************************************************
+*
+**********************************************************************************/
 point readshm(point* segptr, int index){
     return segptr[index];
 }
 
-void removeshm(int shmid){
+
+/**********************************************************************************
+*
+**********************************************************************************/
+void remove_sem(int semid)
+{
+        semctl(semid, 0, IPC_RMID, 0);
+        printf("Semaphore set marked for deletion\n");
+}
+
+
+/**********************************************************************************
+*
+**********************************************************************************/
+void remove_shm(int shmid)
+{
         shmctl(shmid, IPC_RMID, 0);
         printf("Shared memory segment marked for deletion\n");
+}
+
+
+/**********************************************************************************
+*
+**********************************************************************************/
+void remove_queue(int qid)
+{
+        /* Remove the queue */
+        msgctl(qid, IPC_RMID, 0);
+        printf("Message queue marked for deletion\n");
 }
