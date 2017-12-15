@@ -272,8 +272,18 @@ int main(int argc, char** argv){
 	setval(access_semid,0,0);
 
 
+    int id = 1;
+
+    //Put the squares position into shared memory
+    for(id = 1; id <= SQUARE_COUNT; id++){
+      point position = {.x = squares_table[id-1].x, .y = squares_table[id-1].y};
+    writeshm(segptr,id,position);
+  }
+
+  point finish = {.x = 0,.y = 0};
+  writeshm(segptr,0,finish); //finish = 0;
+
     //Creating SQUARE_COUNT workers
-	int id = 1;
 	for(int cntr = 0; cntr < SQUARE_COUNT; cntr++)
 	{
 		pid = fork();
@@ -298,18 +308,10 @@ int main(int argc, char** argv){
 	}   
 
 	//Initializes SDL and the colours
-  	init_output();
-  	printf("Initialized\n");
+    init_output();
+    printf("Initialized\n");
 
 
-  	//Put the squares position into shared memory
-  	for(id = 1; id <= SQUARE_COUNT; id++){
-  		point position = {.x = squares_table[id-1].x, .y = squares_table[id-1].y};
-		writeshm(segptr,id,position);
-	}
-
-	point finish = {.x = 0,.y = 0};
-	writeshm(segptr,0,finish); //finish = 0;
 
 	//We enter the master_process code
 	master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid);

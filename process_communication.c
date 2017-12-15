@@ -30,16 +30,13 @@ void locksem(int sid, int member){
         struct sembuf sem_lock={0, -1, 0}; //IPC_NO_WAIT removed
 
         if( member<0 || member>(get_member_count(sid)-1)){
+                fprintf(stderr,"There are %d semaphores in this set\n", get_member_count(sid));
                 fprintf(stderr, "semaphore member %d out of range\n", member);
                 return;
         }
 
         /* Attempt to lock the semaphore set */
-        if(!getval(sid, member)){
-                fprintf(stderr, "Semaphore resources exhausted (no lock)!\n");
-                exit(1);
-        }
-        
+
         sem_lock.sem_num = member;
         
         if((semop(sid, &sem_lock, 1)) == -1){
