@@ -458,7 +458,7 @@ int main(int argc, char** argv){
     writeshm(segptr,SQUARE_COUNT + 1,allUpdated); //finish = 0;
 
     //Creating SQUARE_COUNT workers
-	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT + 1; cntr++){
+	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT+1; cntr++){
 		
         pid = fork();
  
@@ -469,14 +469,14 @@ int main(int argc, char** argv){
 		if(pid == 0){
             //The last son is the control process
             if(id == SQUARE_COUNT){
-                printf("Id : %d CONTROL\n",id);
+                printf("Id : %d CONTROL,counter:%d\n",id,cntr);
                 control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
             }
             else{
     			//This is a son
     			int speedx = squares_table[id-1].speedx;
     			int speedy = squares_table[id-1].speedy;
-                printf("Id : %d WORKER\n",id);
+                printf("Id : %d WORKER,counter:%d\n",id,cntr);
 
     			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,&qbuf,speedx,speedy);
             }
@@ -485,7 +485,10 @@ int main(int argc, char** argv){
 		}
 		else{
 			//This is the father
+
 			id++;
+            printf("Id incremented to %d\n",id);
+
 		}
 	}   
 
