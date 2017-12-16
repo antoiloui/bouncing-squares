@@ -92,7 +92,6 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
         }
 
 
-
         //Updating the table_of_pixels
         for(j = 0; j < SIZE_X; j++){
             for(k = 0; k < SIZE_Y; k++){
