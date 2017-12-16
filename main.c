@@ -296,6 +296,7 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
         // If no square initialised by the user we push the first random square
         if(k == 0){
             squares_table[0] = new_square;
+            printf("Square number %d created", k);
             k++;
             continue;
         }
@@ -307,12 +308,13 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
             // Check intersection with other squares
             if(hasIntersection(new_square_position, square_position)){
-                printf("New square has intersection, new square is being created.\n");
+                printf("New square has intersection with square number %d, new square is being created.\n", j);
                 break;
             }
             else{
-                printf("New square does not have intersection, ok !\n");
+                printf("New square does not have intersection with square number %d !\n", j);
                 squares_table[k] = new_square;
+                printf("Square number %d created. \n", k);
             }
         }
         k++;
@@ -457,40 +459,6 @@ int main(int argc, char** argv){
     point allUpdated = {.x = 0,.y = 0}; // allUpdated is false
     writeshm(segptr,SQUARE_COUNT + 1,allUpdated); //finish = 0;
 
-    //Creating SQUARE_COUNT workers
-	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT + 1; cntr++){
-		
-        pid = fork();
- 
-		if(pid < 0){
-			perror("Process creation failed");
-			exit(1);
-		}
-		if(pid == 0){
-            //The last son is the control process
-            if(id == SQUARE_COUNT){
-                printf("Id : %d CONTROL\n",id);
-                control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
-            }
-            else{
-    			//This is a son
-    			int speedx = squares_table[id-1].speedx;
-    			int speedy = squares_table[id-1].speedy;
-                printf("Id : %d WORKER\n",id);
-
-    			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,&qbuf,speedx,speedy);
-            }
-            cntr = SQUARE_COUNT+1;
-
-		}
-		else{
-			//This is the father
-			id++;
-		}
-	}   
-
-   printf("Id : %d MASTER\n",id);
-
 
     int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
@@ -503,12 +471,48 @@ int main(int argc, char** argv){
         }
     }
 
-	//Initializes SDL and the colours
+    //Initializes SDL and the colours
     init_output();
     printf("Initialized\n");
 
-	//We enter the master_process code
-	master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
-	
+    //Creating SQUARE_COUNT workers
+    int cntr;
+	for(cntr = 0, id = 1; cntr < SQUARE_COUNT + 1; cntr++){
+		
+        pid = fork();
+ 
+		if(pid < 0){
+			perror("Process creation failed");
+			exit(1);
+		}
+		if(pid == 0){
+
+            if(cntr < SQUARE_COUNT){
+                //This is a son
+                int speedx = squares_table[id-1].speedx;
+                int speedy = squares_table[id-1].speedy;
+                printf("cntr = %d       WORKER %d       id = %d\n",cntr, id, id);
+
+                worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,&qbuf,speedx,speedy);
+            }else{
+                //The last son is the master process
+                printf("cntr = %d       MASTER %d       id = %d\n",cntr, id, id);
+
+                master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
+            }
+
+            cntr = SQUARE_COUNT+1;
+
+		}
+		else{
+			//This is the father
+			id++;
+		}
+	} 
+
+    printf("cntr = %d       CONTROL %d       id = %d\n",cntr, id, id);
+    if(pid != 0)
+        control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
+
 	return 0;
 }
