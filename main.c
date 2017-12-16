@@ -30,7 +30,7 @@ int kbhit(void);//Returns 1 if the user pressed a key, and 0 otherwise
 /*****************************************PROCESSES**********************************************/
 
 
-/*
+
 control_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int msgq_id, int shmid){
     char c;
     point finish;
@@ -54,7 +54,7 @@ control_process(point* segptr, int workers_semid, int access_semid, int posUpdat
     remove_sem(collision_semid);
 
   }
-  */
+  
   
 
 
@@ -290,7 +290,7 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
         for(int j = 0; j < k; j++){
             // Check intersection with other squares
             if(hasIntersection(new_square, squares_table[j])){
-                printf("New square has intersection, new square is being createt.\n");
+                printf("New square has intersection, new square is being created.\n");
                 break;
             }
             else{
@@ -441,8 +441,9 @@ int main(int argc, char** argv){
 			exit(1);
 		}
 		if(pid == 0){
-            /*if(id == SQUARE_COUNT)
-                controller()*/
+            //The last son is the control process
+            if(id == SQUARE_COUNT)
+                control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid)
 			//This is a son
 			int speedx = squares_table[id-1].speedx;
 			int speedy = squares_table[id-1].speedy;
@@ -455,7 +456,6 @@ int main(int argc, char** argv){
 			id++;
 		}
 	}   
-
 
     int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
@@ -472,13 +472,8 @@ int main(int argc, char** argv){
     init_output();
     printf("Initialized\n");
 
-
-
 	//We enter the master_process code
 	master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid);
-
-    //control_process(SQUARE_COUNT+2, SQUARE_COUNT+1, SQUARE_COUNT);
-
 	
 	return 0;
 }
