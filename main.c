@@ -1,3 +1,4 @@
+//Including system libraries
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -13,11 +14,11 @@
 #include <fcntl.h>
 #include <errno.h>
 
+//Including user libraries
 #include "process_communication.h"
 #include "constants.h"
 #include "output.h"
 
-#define NPROCESS 3
 
 /************************************PROTOTYPES****************************************************/
 int hasIntersection(square a, square b); //Returns 1 if the two squares intersect and 0 otherwise
