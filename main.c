@@ -526,7 +526,7 @@ int main(int argc, char** argv){
                 worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,speedx,speedy);
             } else{
                
-                control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
+                //control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
             }
                 
             cntr = SQUARE_COUNT +1;
@@ -537,8 +537,8 @@ int main(int argc, char** argv){
 			id++;
 		}
 	} 
-    if(pid != 0)
-        //master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
+    //if(pid != 0)
+        master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
         
 
 	return 0;
