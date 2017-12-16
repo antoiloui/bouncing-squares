@@ -116,6 +116,10 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
             }
         }
 
+        //Set allUpdated to false
+        allUpdated.x = 0;
+        writeshm(segptr,SQUARE_COUNT+1,allUpdated); 
+
         //Apply the change on SDL display
         update_output(table_of_pixels);
         //Wait a bit
@@ -125,7 +129,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
 
 
-worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int collision_semid,int msgq_id,struct mymsgbuf *qbuf, int speedx, int speedy){
+worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int collision_semid,int msgq_id, int speedx, int speedy){
 
     point next_pos;
     point current_pos;
@@ -172,11 +176,17 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
                 if(hasIntersection(next_pos,other_pos)){
                     if(getval(workers_semid,other_id) == 0){ //if the other has updated it's position
                         printf("Worker %d collided with worker %d \n", id, other_id);
-
                         unlocksem(collision_semid,other_id-1);//signal(collision_id)
+
                         struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
-                        send_message(msgq_id,qbuf, other_id, id,speed);
-                        read_message(msgq_id,qbuf, id, other_id);
+                        struct mymsgbuf qbuf ={
+                                                .receiver = other_id, // type
+                                                .sender = id,
+                                                .speed = speed  // message text 
+                                                };
+
+                        send_message(msgq_id,&qbuf, other_id);
+                        read_message(msgq_id,&qbuf, id, other_id);
                         speedx = qbuf->speed.speed_x;
                         speedy = qbuf->speed.speed_y;
                         next_pos.x = current_pos.x + speedx;
@@ -199,8 +209,9 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
         printf("Worker %d position updated\n", id);
 
         locksem(collision_semid,id-1); // Wait for collision
-        printf("Collision semaphore unlocked (a)\n");
+        printf("Worker %d Collision semaphore unlocked (a)\n",id);
 
+        printf("allUpdated is: %d,",readshm(segptr,SQUARE_COUNT+1).x);
         while(readshm(segptr,SQUARE_COUNT+1).x == 0){
             struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
             int other_id = qbuf->receiver;
@@ -210,11 +221,11 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
             send_message(msgq_id,qbuf, id, other_id,speed); //Send speed
 
             locksem(collision_semid,id-1); // Wait for collision
-            printf("Collision semaphore unlocked (b)\n");
+            printf("Worker %d Collision semaphore unlocked (b)\n",id);
 
         }
 
-        printf("Waiting to reactivate\n");
+        printf("Worker %d Waiting to reactivate\n",id);
 
         locksem(workers_semid,id-1); // Wait for the master process
 
@@ -381,7 +392,6 @@ int main(int argc, char** argv){
 	key_t key_shm;
     key_t key_q;
 	pid_t pid;
-    struct mymsgbuf qbuf;
 	point *segptr;
 
 
@@ -489,7 +499,7 @@ int main(int argc, char** argv){
                 //This is a son
                 int speedx = squares_table[id-1].speedx;
                 int speedy = squares_table[id-1].speedy;
-                worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,&qbuf,speedx,speedy);
+                worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,speedx,speedy);
 
             }
             else
