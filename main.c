@@ -322,12 +322,12 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
         //rand()%(max-min)+min
         square new_square = {
-        	.x = rand()%(SIZE_X - SQUARE_WIDTH),
+            .x = rand()%(SIZE_X - SQUARE_WIDTH),
             .y = rand()%(SIZE_Y - SQUARE_WIDTH),
             .speedx = rand()% 3 -1,
             .speedy = rand()%3 -1,
             .color = k%4 +1
-    	   };
+           };
 
         // If no square initialised by the user we push the first random square
         if(k == 0){
@@ -393,19 +393,19 @@ int kbhit(void){
 
 int main(int argc, char** argv){
 
-	int workers_semid, access_semid, posUpdated_semid, collision_semid;
+    int workers_semid, access_semid, posUpdated_semid, collision_semid;
     int msgq_id;
     int shmid;
-	key_t key_sem_workers, key_sem_access, key_sem_posUpdated, key_sem_collision;
-	key_t key_shm;
+    key_t key_sem_workers, key_sem_access, key_sem_posUpdated, key_sem_collision;
+    key_t key_shm;
     key_t key_q;
-	pid_t pid;
-	point *segptr;
+    pid_t pid;
+    point *segptr;
 
 
     srand(time(NULL));
 
-	//Asking how much squares user wants
+    //Asking how much squares user wants
     int SQUARE_COUNT = 0;
 
     while(true){
@@ -418,9 +418,9 @@ int main(int argc, char** argv){
             break;
     }
     
-	//Initialize SQUARE_COUNT number of squares
-	square squares_table[SQUARE_COUNT];
-	initializeSquares(squares_table,SQUARE_COUNT);
+    //Initialize SQUARE_COUNT number of squares
+    square squares_table[SQUARE_COUNT];
+    initializeSquares(squares_table,SQUARE_COUNT);
 
 
     key_sem_access = ftok(".", 'A');
@@ -431,10 +431,10 @@ int main(int argc, char** argv){
     key_q = ftok(".", 'Q');
 
     //We need to put the square table in shared memory, as well
-   	// as finish [finish, SQ1, SQ2, SQ3, ...] and allUpdated
+    // as finish [finish, SQ1, SQ2, SQ3, ...] and allUpdated
     int shmsize = SQUARE_COUNT*sizeof(square) + 2;
 
-	/* Open the shared memory segment - create if necessary */
+    /* Open the shared memory segment - create if necessary */
     if((shmid = shmget(key_shm,shmsize, IPC_CREAT|IPC_EXCL|0666)) == -1) {
             printf("Shared memory segment exists - opening as client\n");
 
@@ -456,16 +456,16 @@ int main(int argc, char** argv){
     }
 
 
-	//Creating a semaphore set with SQUARE_COUNT members
-	createsem(&workers_semid, key_sem_workers, SQUARE_COUNT);
-	setall(workers_semid,0);
-	//Create a mutex to use when all workers have updated their positions
-	createsem(&posUpdated_semid, key_sem_posUpdated, 1);
-	setval(posUpdated_semid,0,0);
+    //Creating a semaphore set with SQUARE_COUNT members
+    createsem(&workers_semid, key_sem_workers, SQUARE_COUNT);
+    setall(workers_semid,0);
+    //Create a mutex to use when all workers have updated their positions
+    createsem(&posUpdated_semid, key_sem_posUpdated, 1);
+    setval(posUpdated_semid,0,0);
 
-	//Create a mutex for the access to the square table
-	createsem(&access_semid,key_sem_access ,1);
-	setval(access_semid,0,0);
+    //Create a mutex for the access to the square table
+    createsem(&access_semid,key_sem_access ,1);
+    setval(access_semid,0,0);
 
     //Create a sempahore to signal collision with another square
     createsem(&collision_semid,key_sem_collision ,SQUARE_COUNT);
@@ -492,6 +492,38 @@ int main(int argc, char** argv){
     point allUpdated = {.x = 0,.y = 0}; // allUpdated is false
     writeshm(segptr,SQUARE_COUNT + 1,allUpdated); //finish = 0;
 
+
+    //Creating SQUARE_COUNT workers
+    for(int cntr = 0,id = 1; cntr < SQUARE_COUNT+1 ; cntr++){
+        
+        pid = fork();
+ 
+        if(pid < 0){
+            perror("Process creation failed");
+            exit(1);
+        }
+        if(pid == 0){
+
+            if(cntr < SQUARE_COUNT){
+                //This is a son
+                int speedx = squares_table[id-1].speedx;
+                int speedy = squares_table[id-1].speedy;
+                worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,speedx,speedy);
+            } else{
+               master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
+            }
+                
+            cntr = SQUARE_COUNT +1;
+
+        }
+        else{
+            //This is the father
+            id++;
+        }
+    } 
+
+
+
     int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
     for(id = 1; id <= SQUARE_COUNT; id++){
@@ -508,38 +540,9 @@ int main(int argc, char** argv){
     printf("Initialized\n");
 
 
-    //Creating SQUARE_COUNT workers
-	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT+1 ; cntr++){
-		
-        pid = fork();
- 
-		if(pid < 0){
-			perror("Process creation failed");
-			exit(1);
-		}
-		if(pid == 0){
-
-            if(cntr < SQUARE_COUNT){
-                //This is a son
-                int speedx = squares_table[id-1].speedx;
-                int speedy = squares_table[id-1].speedy;
-                worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,speedx,speedy);
-            } else{
-               
-                //control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
-            }
-                
-            cntr = SQUARE_COUNT +1;
-
-		}
-		else{
-			//This is the father
-			id++;
-		}
-	} 
-    //if(pid != 0)
-        master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
+    if(pid != 0)
+        control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
         
 
-	return 0;
+    return 0;
 }
