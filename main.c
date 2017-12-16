@@ -516,8 +516,8 @@ int main(int argc, char** argv){
                 int speedy = squares_table[id-1].speedy;
                 worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,speedx,speedy);
             } else{
-                //We enter the master_process code
-                master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
+               
+                control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
             }
                 
             cntr = SQUARE_COUNT +1;
@@ -529,7 +529,8 @@ int main(int argc, char** argv){
 		}
 	} 
     if(pid != 0)
-        control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
+        //master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
+        
 
-	return 1;
+	return 0;
 }
