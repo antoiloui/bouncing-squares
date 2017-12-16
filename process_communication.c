@@ -80,22 +80,25 @@ void unlocksem(int sid, int member){
 **********************************************************************************/
 void createsem(int *sid, key_t key, int members){
 
-    printf("Attempting to create new semaphore %d set with %d members\n ",*sid,members);
 
     if((*sid = semget(key, members, IPC_CREAT|IPC_EXCL|0666)) == -1) {
         fprintf(stderr, "Semaphore set already exists!\n");
         exit(1);
     }
+    printf("Created new semaphore %d set with %d members\n ",*sid,members);
+
 }
 
 void createqueue(int *msgqueue_id, key_t key_q, int members){
 
-    printf("Attempting to create new message queue set %d with %d members\n",*msgqueue_id,members);
     /* Open the queue - create if necessary */
     if((*msgqueue_id = msgget(key_q, IPC_CREAT|0660)) == -1) {
         perror("msgget");
         exit(1);
     }
+
+    printf("Created new message queue %d set with %d members\n ",*msgqueue_id,members);
+
 }
         
 /**********************************************************************************
