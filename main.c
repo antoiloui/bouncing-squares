@@ -179,16 +179,18 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
                         unlocksem(collision_semid,other_id-1);//signal(collision_id)
 
                         struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
-                        struct mymsgbuf qbuf ={
-                                                .receiver = other_id, // type
+                        struct mymsgbuf sendbuf ={
                                                 .sender = id,
                                                 .speed = speed  // message text 
                                                 };
 
-                        send_message(msgq_id,&qbuf, other_id);
-                        read_message(msgq_id,&qbuf, id, other_id);
-                        speedx = qbuf->speed.speed_x;
-                        speedy = qbuf->speed.speed_y;
+                        send_message(msgq_id,&sendbuf, other_id);
+
+                        struct mymsgbuf receivebuf;
+
+                        read_message(msgq_id,&receivebuf, id);
+                        speedx = receivebuf.speed.speed_x;
+                        speedy = receivebuf.speed.speed_y;
                         next_pos.x = current_pos.x + speedx;
                         next_pos.y = current_pos.y + speedy;
 
@@ -213,12 +215,19 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
         printf("allUpdated is: %d,",readshm(segptr,SQUARE_COUNT+1).x);
         while(readshm(segptr,SQUARE_COUNT+1).x == 0){
-            struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
-            int other_id = qbuf->receiver;
-            read_message(msgq_id,qbuf,other_id,id); //Read speed
-            speedx = qbuf->speed.speed_x; //Update speed
-            speedy = qbuf->speed.speed_y;
-            send_message(msgq_id,qbuf, id, other_id,speed); //Send speed
+            
+            struct mymsgbuf receivebuf; //Container to receive speed
+
+            read_message(msgq_id,&receivebuf,id); //Read speed
+            speedx = receivebuf.speed.speed_x; //Update speed
+            speedy = receivebuf.speed.speed_y;
+            
+
+            long other_id = (long)receivebuf.sender; //Get the id of the sender
+            struct speed_s new_speed = {.speed_x = speedx, .speed_y = speedy};
+            struct mymsgbuf sendbuf ={.sender = id,.speed = new_speed};   
+                                    
+            send_message(msgq_id,&sendbuf,other_id); //Send speed back to sender
 
             locksem(collision_semid,id-1); // Wait for collision
             printf("Worker %d Collision semaphore unlocked (b)\n",id);

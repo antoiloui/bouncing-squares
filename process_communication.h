@@ -104,7 +104,7 @@ struct speed_s{
 
 struct mymsgbuf {
 
-    long receiver; // type
+    long type; 
     int sender; 
     
     struct speed_s speed;      // message text 
