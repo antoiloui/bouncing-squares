@@ -33,11 +33,10 @@ int kbhit(void);//Returns 1 if the user pressed a key, and 0 otherwise
 
 control_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int msgq_id, int shmid){
     char c;
-    point finish;
+    point finish = {.x = 1};
 
     if(kbhit()){
         printf("Enter pressed, program exited.\n");
-        finish.x = 1;
         writeshm(segptr,0,finish);
 
         // Close messages queues
@@ -89,9 +88,10 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
         //Set allUpdated to true
         allUpdated.x = 1;
-        writeshm(segptr,SQUARE_COUNT+1,allUpdated); 
+        writeshm(segptr,SQUARE_COUNT+1, allUpdated); 
 
-        for(id = 1; id <= SQUARE_COUNT; id++){ //Unlock all semaphores waiting for collision
+        //Unlock all semaphores waiting for collision
+        for(id = 1; id <= SQUARE_COUNT; id++){ 
             printf("Unlocking collision\n");
             unlocksem(collision_semid,id-1);
 
@@ -115,6 +115,10 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
                 }
             }
         }
+
+        //Set allUpdated to false
+        allUpdated.x = 0;
+        writeshm(segptr,SQUARE_COUNT+1, allUpdated); 
 
         //Apply the change on SDL display
         update_output(table_of_pixels);
@@ -166,7 +170,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
             speedy = 1;
         }
 
-        for(size_t other_id = 1; other_id <= SQUARE_COUNT; other_id++){
+        for(int other_id = 1; other_id <= SQUARE_COUNT; other_id++){
             if(other_id != id){
                 point other_pos = readshm(segptr,other_id);
                 if(hasIntersection(next_pos,other_pos)){
@@ -186,8 +190,6 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
                 }          
             }
         }
-
-
 
 
         writeshm(segptr,id,next_pos); //Update position
@@ -458,8 +460,8 @@ int main(int argc, char** argv){
 
 
 
-
-    point finish = {.x = 0,.y = 0};
+    //initialisation of the finish variable
+    point finish = {.x = 0, .y = 0};
     writeshm(segptr,0,finish); //finish = 0;
 
     int id = 1;
@@ -474,38 +476,6 @@ int main(int argc, char** argv){
     point allUpdated = {.x = 0,.y = 0}; // allUpdated is false
     writeshm(segptr,SQUARE_COUNT + 1,allUpdated); //finish = 0;
 
-    //Creating SQUARE_COUNT workers
-	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT+1 ; cntr++){
-		
-        pid = fork();
- 
-		if(pid < 0){
-			perror("Process creation failed");
-			exit(1);
-		}
-		if(pid == 0){
-            //The last son is the control process
-            if(cntr < SQUARE_COUNT){
-                //This is a son
-                int speedx = squares_table[id-1].speedx;
-                int speedy = squares_table[id-1].speedy;
-                worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,&qbuf,speedx,speedy);
-
-            }
-            else
-                control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
-
-
-
-            cntr = SQUARE_COUNT +1;
-
-		}
-		else{
-			//This is the father
-			id++;
-		}
-	}   
-
     int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
     for(id = 1; id <= SQUARE_COUNT; id++){
@@ -517,12 +487,42 @@ int main(int argc, char** argv){
         }
     }
 
-	//Initializes SDL and the colours
+    //Initializes SDL and the colours
     init_output();
     printf("Initialized\n");
 
-	//We enter the master_process code
-	master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
-	
-	return 0;
+
+    //Creating SQUARE_COUNT workers
+	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT+1 ; cntr++){
+		
+        pid = fork();
+ 
+		if(pid < 0){
+			perror("Process creation failed");
+			exit(1);
+		}
+		if(pid == 0){
+
+            if(cntr < SQUARE_COUNT){
+                //This is a son
+                int speedx = squares_table[id-1].speedx;
+                int speedy = squares_table[id-1].speedy;
+                worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,&qbuf,speedx,speedy);
+            } else{
+                //We enter the master_process code
+                master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
+            }
+                
+            cntr = SQUARE_COUNT +1;
+
+		}
+		else{
+			//This is the father
+			id++;
+		}
+	} 
+    if(pid != 0)
+        control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
+
+	return 1;
 }
