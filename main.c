@@ -24,14 +24,8 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT);
 
 
 /*****************************************PROCESSES**********************************************/
-<<<<<<< HEAD
-/*control_process(){
-    char c;
-    point finish = 0;
-=======
->>>>>>> 12992c3d7e373767db7229651e4f9a40f395fa3b
 
-
+/*
 control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, pid_t pid){
   char c;
   point finish;
@@ -44,21 +38,18 @@ control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_s
   }
 
   //Close semaphores
-    removeshm(workers_semid);
-    removeshm(access_semid);
-    removeshm(posUpdated_semid);
+    removesem(workers_semid);
+    removesem(access_semid);
+    removesem(posUpdated_semid);
 
   // Close shared memory segments
-    for(size_t i=0; i < SQUARE_COUNT+1; i++){
+    for(size_t i = 0; i < SQUARE_COUNT + 1; i++){
       removeshm(segptr[i]);
     }
-<<<<<<< HEAD
     removeshm(int shmid);
     removeshm(int shmid)
-}*/
-=======
-  
->>>>>>> 12992c3d7e373767db7229651e4f9a40f395fa3b
+}
+
 
   // Close messages queues
   
@@ -68,6 +59,7 @@ control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_s
     kill(pid[i], SIGKILL);
 
   }
+  */
   
 
 
@@ -84,7 +76,6 @@ master_process(point* segptr,int SQUARE_COUNT, int* workers_semid, int access_se
       printf("\nEnter next cycle\n");
       printf("Compute next table\n");
 
-<<<<<<< HEAD
     for(int id = 1; id <= SQUARE_COUNT; id++){
       unlocksem(workers_semid,id);
     }
@@ -102,12 +93,6 @@ master_process(point* segptr,int SQUARE_COUNT, int* workers_semid, int access_se
         for(id = 1; id <= SQUARE_COUNT; id++){
             unlocksem(workers_semid,id);
         }
->>>>>>> 68b1487ef788872ffc32e80ad2e3dcec30738fe6
-=======
-      for(int id = 1; id <= SQUARE_COUNT; id++){
-        unlocksem(workers_semid,id);
-      }
->>>>>>> 19d242e20734532a574b88e0c9a5ed773193055b
 
         unlocksem(access_semid,0); //Give access to the square table
 
@@ -150,24 +135,6 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
   point current_pos;
 
   while(readshm(segptr,0).x != 1) {
-    printf("Worker %d is working", id);
-    locksem(access_semid,0); //wait(accessPositionTable)
-    //Get current position
-    current_pos = readshm(segptr,id);
-    //Compute next position
-    next_pos.x = current_pos.x + speedx;
-    next_pos.y = current_pos.y + speedy;
-    //Update position
-    writeshm(segptr,id,next_pos);
-    unlocksem(access_semid,0);//signal(accessPositionTable)
-
-    unlocksem(posUpdated_semid,0); //has updated it's position
-    locksem(workers_semid,id); // Wait for the master process
-
-  }
-<<<<<<< HEAD
-=======
-    while((finish = readshm(segptr,0).x) != 1) {
         printf("Worker %d is working\n", id);
         locksem(access_semid,0); //wait(accessPositionTable)
         //Get current position
@@ -181,13 +148,8 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
         unlocksem(posUpdated_semid,0); //has updated it's position
         locksem(workers_semid,id); // Wait for the master process
-    }
->>>>>>> 68b1487ef788872ffc32e80ad2e3dcec30738fe6
-}
-=======
->>>>>>> 19d242e20734532a574b88e0c9a5ed773193055b
 
-
+  }
 
 /******************************************FUNCTIONS***************************************************/
 
@@ -200,8 +162,6 @@ int hasIntersection(square a, square b){
         rc = 1;
     return rc;
 }
-
-
 
 
 void initializeSquares(square* squares_table,int SQUARE_COUNT){
