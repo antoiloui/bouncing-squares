@@ -110,7 +110,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
         //Apply the change on SDL display
         update_output(table_of_pixels);
         //Wait a bit
-        usleep(30000);
+        usleep(5000);
             
         
     }
@@ -158,6 +158,30 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
             speedy = 1;
         }
 
+        for(size_t other_id = 1; other_id <= SQUARE_COUNT; other_id++){
+            if(other_id != id){
+                point other_pos = readshm(segptr,id);
+                if(hasIntersection(next_pos,other_position)){
+                    if(getval(workers_semid,other_id) == 0){ //if the other has updated it's position
+                        unlocksem(collision_semid,other_id-1);//signal(collision_id)
+
+
+                }
+            }          
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
         //Update position
         writeshm(segptr,id,next_pos);
         unlocksem(access_semid,0);//signal(accessPositionTable)
@@ -173,7 +197,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 /******************************************FUNCTIONS***************************************************/
 
 //Do two squares have an intersection?
-int hasIntersection(square a, square b){
+int hasIntersection(point a, point b){
     int rc = 0;
   
     if(a.y < b.y+SQUARE_WIDTH && a.y+SQUARE_WIDTH > b.y &&
@@ -285,12 +309,12 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
 int main(int argc, char** argv){
 
-	int workers_semid;
-	int access_semid;
-	int posUpdated_semid;
+	int workers_semid, access_semid, posUpdated_semid, collision_semid;
+    int msgq_id;
     int shmid;
 	key_t key_sem_workers, key_sem_access, key_sem_posUpdated;
 	key_t key_shm;
+    key_t key_q;
 	pid_t pid;
 	point *segptr;
 
@@ -314,7 +338,10 @@ int main(int argc, char** argv){
     key_sem_access = ftok(".", 'A');
     key_sem_workers = ftok(".", 'W');
     key_sem_posUpdated = ftok(".",'U');
+    key_sem_collision = ftok(".",'C');
     key_shm = ftok(".",'S');
+    key_q = ftok(".", 'Q');
+
     //We need to put the square table in shared memory, as well
    	// as finish [finish, SQ1, SQ2, SQ3, ...]
     int shmsize = SQUARE_COUNT*sizeof(square) + 1;
@@ -351,6 +378,14 @@ int main(int argc, char** argv){
 	//Create a mutex for the access to the square table
 	createsem(&access_semid,key_sem_access ,1);
 	setval(access_semid,0,0);
+
+    //Create a sempahore to signal collision with another square
+    createsem(&collision_semid,key_sem_collision ,SQUARE_COUNT);
+    setAal(collision_semid,0);
+
+    //Create a message queue for workers to exchange their speeds
+    createqueue(&msgq_id, key_q, 1);
+
 
 
     int id = 1;

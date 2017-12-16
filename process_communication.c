@@ -77,17 +77,24 @@ void unlocksem(int sid, int member){
 **********************************************************************************/
 void createsem(int *sid, key_t key, int members){
 
-        printf("Attempting to create new semaphore set with %d members\n",
-                                members);
+    printf("Attempting to create new semaphore set with %d members\n "members);
 
-        if((*sid = semget(key, members, IPC_CREAT|IPC_EXCL|0666)) == -1) {
-                fprintf(stderr, "Semaphore set already exists!\n");
-                exit(1);
-        }
-
+    if((*sid = semget(key, members, IPC_CREAT|IPC_EXCL|0666)) == -1) {
+        fprintf(stderr, "Semaphore set already exists!\n");
+        exit(1);
+    }
 }
 
+void createqueue(int *msgqueue_id, key_t key_q, int members){
 
+    printf("Attempting to create new message queue set with %d members\n",members);
+    /* Open the queue - create if necessary */
+    if((msgqueue_id = msgget(key_q, IPC_CREAT|0660)) == -1) {
+        perror("msgget");
+        exit(1);
+    }
+}
+        
 /**********************************************************************************
 *
 **********************************************************************************/
@@ -139,6 +146,36 @@ void writeshm(point* segptr,int index, point value){
 **********************************************************************************/
 point readshm(point* segptr, int index){
     return segptr[index];
+}
+/**********************************************************************************
+*
+**********************************************************************************/
+
+void send_message(int qid, struct mymsgbuf *qbuf, long type, char *text)
+{
+        /* Send a message to the queue */
+       // printf("Sending a message ...\n");
+        qbuf->mtype = type;
+        strcpy(qbuf->mtext, text);
+
+        if((msgsnd(qid, (struct msgbuf *)qbuf,
+                strlen(qbuf->mtext)+1, 0)) ==-1)
+        {
+                perror("msgsnd");
+                exit(1);
+        }
+}
+/**********************************************************************************
+*
+**********************************************************************************/
+void read_message(int qid, struct mymsgbuf *qbuf, long type)
+{
+        /* Read a message from the queue */
+       // printf("Reading a message ...\n");
+        qbuf->mtype = type;
+        msgrcv(qid, (struct msgbuf *)qbuf, MAX_SEND_SIZE, type, 0);
+        
+       // printf("Type: %ld Text: %s\n", qbuf->mtype, qbuf->mtext);
 }
 
 
