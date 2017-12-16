@@ -96,8 +96,11 @@ union semun {
 }; 
 
 struct mymsgbuf {
-    long mtype;         // type of message 
-    char mtext[1];      // message text 
+
+    int receiver; // type
+    int sender; 
+    
+    int speed;      // message text 
 };
 
 
@@ -129,11 +132,11 @@ void createqueue(int *msgqueue_id, key_t key_q, int members);
 /**********************************************************************************
 *
 **********************************************************************************/
-void send_message(int qid, struct mymsgbuf *qbuf, long type, char *text);
+void send_message(int qid, struct mymsgbuf *qbuf, int sender,int receiver,int speed);
 /**********************************************************************************
 *
 **********************************************************************************/
-void read_message(int qid, struct mymsgbuf *qbuf, long type);
+void read_message(int qid, struct mymsgbuf *qbuf, int sender, int receiver);
 
 /**********************************************************************************
 *

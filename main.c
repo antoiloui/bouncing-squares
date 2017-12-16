@@ -64,7 +64,7 @@ control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_s
   
 
 
-master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
+master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int msgq_id, int posUpdated_semid) {
 
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
@@ -118,7 +118,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
 
 
-worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
+worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int msgq_id, int speedx, int speedy){
 
     point next_pos;
     point current_pos;
@@ -164,6 +164,13 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
                 if(hasIntersection(next_pos,other_position)){
                     if(getval(workers_semid,other_id) == 0){ //if the other has updated it's position
                         unlocksem(collision_semid,other_id-1);//signal(collision_id)
+
+                        q!(id_collision)// Send vitesse
+                        q?(my_Id) // Receive vitesse
+                        void send_message(qid, struct mymsgbuf *qbuf, receiver, sender, speed){
+                        void read_message(qid, struct mymsgbuf *qbuf, receiver, sender, speed){
+
+
 
 
                 }
@@ -315,6 +322,7 @@ int main(int argc, char** argv){
 	key_t key_shm;
     key_t key_q;
 	pid_t pid;
+    struct mymsgbuf qbuf;
 	point *segptr;
 
 	//Asking how much squares user wants
