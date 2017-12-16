@@ -468,12 +468,16 @@ int main(int argc, char** argv){
 		}
 		if(pid == 0){
             //The last son is the control process
-            if(id == SQUARE_COUNT)
+            if(id == SQUARE_COUNT){
+                printf("Id : %d CONTROL\n",id);
                 control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
+            }
             else{
     			//This is a son
     			int speedx = squares_table[id-1].speedx;
     			int speedy = squares_table[id-1].speedy;
+                printf("Id : %d WORKER\n",id);
+
     			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,&qbuf,speedx,speedy);
             }
             cntr = SQUARE_COUNT+1;
@@ -484,6 +488,9 @@ int main(int argc, char** argv){
 			id++;
 		}
 	}   
+
+   printf("Id : %d MASTER\n",id);
+
 
     int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
