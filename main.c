@@ -64,7 +64,7 @@ control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_s
   
 
 
-master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int msgq_id, int posUpdated_semid) {
+master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
 
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
@@ -118,7 +118,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
 
 
-worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int msgq_id, int speedx, int speedy){
+worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int msgq_id,struct mymsgbuf *qbuf, int speedx, int speedy){
 
     point next_pos;
     point current_pos;
@@ -422,8 +422,8 @@ int main(int argc, char** argv){
 			//This is a son
 			int speedx = squares_table[id-1].speedx;
 			int speedy = squares_table[id-1].speedy;
-			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,speedx,speedy);
-            cntr = SQUARE_COUNT;
+			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,&qbuf,speedx,speedy);
+            cntr = SQUARE_COUNT +1;
 
 		}
 		else{
