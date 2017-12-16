@@ -82,6 +82,15 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
         }
         //printf("All workers updated their position\n");
 
+
+        writeshm(segptr,SQUARE_COUNT+1,1); //Set allUpdated to true
+
+        for(id = 1; id <= SQUARE_COUNT; id++){ //Unlock all semaphores waiting for collision
+            unlocksem(collision_semid,id-1);
+        }
+
+
+
         //Updating the table_of_pixels
         for(j = 0; j < SIZE_X; j++){
             for(k = 0; k < SIZE_Y; k++){
@@ -116,7 +125,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
     while(readshm(segptr,0).x != 1) {
 
         //printf("Worker %d is working\n", id);
-        locksem(access_semid,0); //wait(accessPositionTable)
+        locksem(access_semid,0); //wait(accessPositio   nTable)
         //Get current position
         // printf("Worker %d computing position\n", id);
 
@@ -171,15 +180,21 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
 
 
+        writeshm(segptr,id,next_pos); //Update position
 
-
-
-        //Update position
-        writeshm(segptr,id,next_pos);
         unlocksem(access_semid,0);//signal(accessPositionTable)
-
         unlocksem(posUpdated_semid,0); //has updated it's position
         //printf("Worker %d position updated\n", id);
+        //
+        locksem(collision_semid,id-1); // Wait for collision
+        while(readshm(segptr,SQUARE_COUNT+1) == 0){
+            struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
+            read_message(msgq_id,qbuf,other_id,id); //Read speed
+            speedx = qbuf->speed.speed_x; //Update speed
+            speedy = qbuf->speed.speed_y;
+            send_message(msgq_id,qbuf, id, other_id,speed); //Send speed
+            locksem(collision_semid,id-1); // Wait for collision
+        }
 
         locksem(workers_semid,id-1); // Wait for the master process
 
@@ -378,8 +393,8 @@ int main(int argc, char** argv){
     key_q = ftok(".", 'Q');
 
     //We need to put the square table in shared memory, as well
-   	// as finish [finish, SQ1, SQ2, SQ3, ...]
-    int shmsize = SQUARE_COUNT*sizeof(square) + 1;
+   	// as finish [finish, SQ1, SQ2, SQ3, ...] and allUpdated
+    int shmsize = SQUARE_COUNT*sizeof(square) + 2;
 
 	/* Open the shared memory segment - create if necessary */
     if((shmid = shmget(key_shm,shmsize, IPC_CREAT|IPC_EXCL|0666)) == -1) {
@@ -423,6 +438,10 @@ int main(int argc, char** argv){
 
 
 
+
+    point finish = {.x = 0,.y = 0};
+    writeshm(segptr,0,finish); //finish = 0;
+
     int id = 1;
 
     //Put the squares position into shared memory
@@ -431,8 +450,9 @@ int main(int argc, char** argv){
         writeshm(segptr,id,position);
     }
 
-    point finish = {.x = 0,.y = 0};
-    writeshm(segptr,0,finish); //finish = 0;
+
+    point allUpdated = {.x = 0,.y = 0}; // allUpdated is false
+    writeshm(segptr,SQUARE_COUNT + 1,allUpdated); //finish = 0;
 
     //Creating SQUARE_COUNT workers
 	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT + 1; cntr++){
