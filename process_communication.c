@@ -159,13 +159,10 @@ point readshm(point* segptr, int index){
 *
 **********************************************************************************/
 
-void send_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender,struct speed_s speed){
+void send_message(int qid, struct mymsgbuf *qbuf, long receiver){
         /* Send a message to the queue */
        // printf("Sending a message ...\n");
         qbuf->receiver = receiver;
-        qbuf->sender = sender;
-        qbuf->speed = speed;
-
         size_t length = sizeof(struct mymsgbuf) - sizeof(struct speed_s);
         if((msgsnd(qid, (struct mymsgbuf *)qbuf, length, 0)) ==-1){
                 perror("msgsnd");
@@ -175,7 +172,7 @@ void send_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender,struct
 /**********************************************************************************
 *
 **********************************************************************************/
-void read_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender){
+void read_message(int qid, struct mymsgbuf *qbuf, int receiver){
         /* Read a message from the queue */
        // printf("Reading a message ...\n");
         qbuf->receiver = receiver;

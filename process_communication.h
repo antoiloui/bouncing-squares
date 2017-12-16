@@ -104,7 +104,7 @@ struct speed_s{
 
 struct mymsgbuf {
 
-    int receiver; // type
+    long receiver; // type
     int sender; 
     
     struct speed_s speed;      // message text 
@@ -142,11 +142,11 @@ void createqueue(int *msgqueue_id, key_t key_q, int members);
 /**********************************************************************************
 *
 **********************************************************************************/
-void send_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender,struct speed_s speed);
+void send_message(int qid, struct mymsgbuf *qbuf, long receiver);
 /**********************************************************************************
 *
 **********************************************************************************/
-void read_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender);
+void read_message(int qid, struct mymsgbuf *qbuf, long receiver);
 
 /**********************************************************************************
 *
