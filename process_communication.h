@@ -8,6 +8,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
+#include <sys/msg.h>
 #include <ctype.h>
 #include <string.h>
 #include <time.h>
@@ -95,13 +96,22 @@ union semun {
         struct seminfo *__buf;             /* buffer for IPC_INFO */ 
 }; 
 
+
+struct speed_s{
+  int speed_x;
+  int speed_y;
+};
+
 struct mymsgbuf {
 
     int receiver; // type
     int sender; 
     
-    int speed;      // message text 
+    struct speed_s speed;      // message text 
+
 };
+
+
 
 
 
@@ -132,11 +142,11 @@ void createqueue(int *msgqueue_id, key_t key_q, int members);
 /**********************************************************************************
 *
 **********************************************************************************/
-void send_message(int qid, struct mymsgbuf *qbuf, int sender,int receiver,int speed);
+void send_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender,struct speed_s speed);
 /**********************************************************************************
 *
 **********************************************************************************/
-void read_message(int qid, struct mymsgbuf *qbuf, int sender, int receiver);
+void read_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender);
 
 /**********************************************************************************
 *
