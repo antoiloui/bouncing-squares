@@ -189,7 +189,7 @@ void read_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender){
 void remove_sem(int semid)
 {
         semctl(semid, 0, IPC_RMID, 0);
-        printf("Semaphore set marked for deletion\n");
+        printf("Semaphore set marked for deletion.\n");
 }
 
 
@@ -199,7 +199,7 @@ void remove_sem(int semid)
 void remove_shm(int shmid)
 {
         shmctl(shmid, IPC_RMID, 0);
-        printf("Shared memory segment marked for deletion\n");
+        printf("Shared memory segment marked for deletion.\n");
 }
 
 
@@ -210,5 +210,5 @@ void remove_queue(int qid)
 {
         /* Remove the queue */
         msgctl(qid, IPC_RMID, 0);
-        printf("Message queue marked for deletion\n");
+        printf("Message queue marked for deletion.\n");
 }
