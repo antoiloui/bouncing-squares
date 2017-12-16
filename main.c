@@ -67,8 +67,8 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
     while(readshm(segptr,0).x != 1) {
     
         //Display
-        printf("\nEnter next cycle\n");
-        printf("Compute next table\n");
+        //printf("\nEnter next cycle\n");
+        //printf("Compute next table\n");
 
         for(int id = 1; id <= SQUARE_COUNT; id++){
             unlocksem(workers_semid,id-1);
@@ -81,7 +81,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
         for(int cntr = 0; cntr < SQUARE_COUNT ; cntr++) {
             locksem(posUpdated_semid,0);
         }
-        printf("All workers updated their position\n");
+        //printf("All workers updated their position\n");
 
         //Set allUpdated to true
         allUpdated.x = 1;
@@ -458,7 +458,7 @@ int main(int argc, char** argv){
     writeshm(segptr,SQUARE_COUNT + 1,allUpdated); //finish = 0;
 
     //Creating SQUARE_COUNT workers
-	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT+1; cntr++){
+	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT ; cntr++){
 		
         pid = fork();
  
@@ -468,32 +468,22 @@ int main(int argc, char** argv){
 		}
 		if(pid == 0){
             //The last son is the control process
-            if(id == SQUARE_COUNT){
-                printf("Id : %d CONTROL,counter:%d\n",id,cntr);
+/*            if(id == SQUARE_COUNT)
                 control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
-            }
-            else{
-    			//This is a son
-    			int speedx = squares_table[id-1].speedx;
-    			int speedy = squares_table[id-1].speedy;
-                printf("Id : %d WORKER,counter:%d\n",id,cntr);
 
-    			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,&qbuf,speedx,speedy);
-            }
-            cntr = SQUARE_COUNT+1;
+*/
+			//This is a son
+			int speedx = squares_table[id-1].speedx;
+			int speedy = squares_table[id-1].speedy;
+			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,&qbuf,speedx,speedy);
+            cntr = SQUARE_COUNT;
 
 		}
 		else{
 			//This is the father
-
 			id++;
-            printf("Id incremented to %d\n",id);
-
 		}
 	}   
-
-   printf("Id : %d MASTER\n",id);
-
 
     int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
