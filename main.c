@@ -11,6 +11,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include "process_communication.h"
 #include "constants.h"
@@ -63,45 +64,31 @@ control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_s
   
 
 
-master_process(point* segptr,int SQUARE_COUNT, int* workers_semid, int access_semid, int posUpdated_semid) {
+master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
 
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
   int id,j,k;
   
-  //As long as the user doesn't quit
-  while(readshm(segptr,0).x != 1) {
-    
-      //Display
-      printf("\nEnter next cycle\n");
-      printf("Compute next table\n");
-
-    for(int id = 1; id <= SQUARE_COUNT; id++){
-      unlocksem(workers_semid,id);
-    }
-
-    int finish = 0;
-    int id,j,k;
-
     //As long as the user doesn't quit
-    while((finish = readshm(segptr,0).x) != 1) {
-        
+    while(readshm(segptr,0).x != 1) {
+    
         //Display
         printf("\nEnter next cycle\n");
         printf("Compute next table\n");
 
-        for(id = 1; id <= SQUARE_COUNT; id++){
-            unlocksem(workers_semid,id);
+        for(int id = 1; id <= SQUARE_COUNT; id++){
+            unlocksem(workers_semid,id-1);
         }
-
+        
         unlocksem(access_semid,0); //Give access to the square table
 
 
         //Wait before all workers have updated their position
         for(int cntr = 0; cntr < SQUARE_COUNT ; cntr++) {
-            printf("Process %d updated its position",id);
             locksem(posUpdated_semid,0);
         }
+        printf("All workers updated their position\n");
 
         //Updating the table_of_pixels
         for(j = 0; j < SIZE_X; j++){
@@ -123,6 +110,7 @@ master_process(point* segptr,int SQUARE_COUNT, int* workers_semid, int access_se
         update_output(table_of_pixels);
         //Wait a bit
         usleep(15000);
+            
         
     }
 }
@@ -131,13 +119,15 @@ master_process(point* segptr,int SQUARE_COUNT, int* workers_semid, int access_se
 
 worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
 
-  point next_pos;
-  point current_pos;
+    point next_pos;
+    point current_pos;
 
-  while(readshm(segptr,0).x != 1) {
+    while(readshm(segptr,0).x != 1) {
         printf("Worker %d is working\n", id);
         locksem(access_semid,0); //wait(accessPositionTable)
         //Get current position
+        printf("Worker %d computing position\n", id);
+
         current_pos = readshm(segptr,id);
         //Compute next position
         next_pos.x = current_pos.x + speedx;
@@ -147,9 +137,12 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
         unlocksem(access_semid,0);//signal(accessPositionTable)
 
         unlocksem(posUpdated_semid,0); //has updated it's position
-        locksem(workers_semid,id); // Wait for the master process
+        printf("Worker %d position updated\n", id);
 
-  }
+        locksem(workers_semid,id-1); // Wait for the master process
+
+    }
+}
 
 /******************************************FUNCTIONS***************************************************/
 
@@ -387,7 +380,7 @@ int main(int argc, char** argv){
 	//We enter the master_process code
 	master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid);
 
-  control_process(SQUARE_COUNT+2, SQUARE_COUNT+1, SQUARE_COUNT);
+    //control_process(SQUARE_COUNT+2, SQUARE_COUNT+1, SQUARE_COUNT);
 
 	
 	return 0;

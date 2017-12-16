@@ -8,6 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include<stdbool.h>
+#include <errno.h>
 
 #include "process_communication.h"
 
@@ -33,17 +34,15 @@ void locksem(int sid, int member){
 
         struct sembuf sem_lock={0, -1, 0}; //IPC_NO_WAIT removed
 
-        if( member<0 || member>(get_member_count(sid)-1)){
-                fprintf(stderr, "(Lock)sem %d of set %d out of range\n", member,sid);
-                return;
-        }
-
         /* Attempt to lock the semaphore set */
 
         sem_lock.sem_num = member;
         
         if((semop(sid, &sem_lock, 1)) == -1){
+                int errnum = errno;
                 fprintf(stderr, "Lock failed (sem %d of set %d)\n",member,sid);
+                fprintf(stderr, "Value of errno: %d)\n",errno);
+                fprintf(stderr, "Error: %s \n",strerror(errnum));
                 exit(1);
         }
         else
@@ -57,16 +56,14 @@ void locksem(int sid, int member){
 void unlocksem(int sid, int member){
         struct sembuf sem_unlock={member, 1,0}; //IPC_NO_WAIT removed
 
-        if( member<0 || member>(get_member_count(sid)-1)){
-                fprintf(stderr, "(Unlock)sem %d of set %d out of range\n", member,sid);
-                return;
-        }
-
         sem_unlock.sem_num = member;
 
         /* Attempt to lock the semaphore set */
         if((semop(sid, &sem_unlock, 1)) == -1){
+                int errnum = errno;
                 fprintf(stderr, "Unlock failed (sem %d of set %d)\n",member,sid);
+                fprintf(stderr, "Value of errno: %d)\n",errno);
+                fprintf(stderr, "Error: %s \n",strerror(errnum));
                 exit(1);
         }
         else
