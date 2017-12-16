@@ -1,7 +1,7 @@
 #ifndef PROCESS_COMMUNICATION
 #define PROCESS_COMMUNICATION 
 
-
+//Including system libraries
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -168,7 +168,7 @@ point readshm(point* segptr,int index);
 /**********************************************************************************
 *
 **********************************************************************************/
-void removeshm(int shmid);
+void remove_shm(int shmid);
 
 /**********************************************************************************
 *

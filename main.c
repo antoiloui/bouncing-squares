@@ -20,44 +20,37 @@
 #define NPROCESS 3
 
 /************************************PROTOTYPES****************************************************/
-int hasIntersection(square a, square b);  //Returns 1 if the two squares intersect and 0 otherwise
-void initializeSquares(square* squares_table,int SQUARE_COUNT);
+int hasIntersection(square a, square b); //Returns 1 if the two squares intersect and 0 otherwise
+void initializeSquares(square* squares_table,int SQUARE_COUNT); //Initialize the squares
+int kbhit(void);//Returns 1 if the user pressed a key, and 0 otherwise
+
 
 
 /*****************************************PROCESSES**********************************************/
 
+
 /*
-control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, pid_t pid){
-  char c;
-  point finish;
+control_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int msgq_id, int shmid){
+    char c;
+    point finish;
 
-  while(c = getChar()){
-    if(putchar(c) == '\n')
-      printf("Enter pressed, program exited.");
-      finish.x = 1;
-      writeshm(segptr,0,finish);
-  }
-
-  //Close semaphores
-    removesem(workers_semid);
-    removesem(access_semid);
-    removesem(posUpdated_semid);
-
-  // Close shared memory segments
-    for(size_t i = 0; i < SQUARE_COUNT + 1; i++){
-      removeshm(segptr[i]);
+    if(kbhit()){
+        printf("Enter pressed, program exited.");
+        finish.x = 1;
+        writeshm(segptr,0,finish);
     }
-    removeshm(int shmid);
-    removeshm(int shmid)
-}
 
+    // Close messages queues
+    remove_queue(msgq_id);
 
-  // Close messages queues
-  
+    // Close shared memory
+    remove_shm(shmid);
 
-  // Kill the child processes
-  for(size_t i=0; i < NPROCESS+1 ;i++){
-    kill(pid[i], SIGKILL);
+    //Close semaphores
+    remove_sem(workers_semid);
+    remove_sem(access_semid);
+    remove_sem(posUpdated_semid);
+    remove_sem(collision_semid);
 
   }
   */
@@ -67,7 +60,6 @@ control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_s
 master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
 
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
-
   int id,j,k;
   
     //As long as the user doesn't quit
@@ -110,20 +102,18 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
         //Apply the change on SDL display
         update_output(table_of_pixels);
         //Wait a bit
-        usleep(5000);
-            
-        
+        usleep(5000);    
     }
 }
 
 
 
 worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int speedx, int speedy){
-
     point next_pos;
     point current_pos;
 
     while(readshm(segptr,0).x != 1) {
+
         //printf("Worker %d is working\n", id);
         locksem(access_semid,0); //wait(accessPositionTable)
         //Get current position
@@ -194,9 +184,12 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
     }
 }
 
+
+
+
 /******************************************FUNCTIONS***************************************************/
 
-//Do two squares have an intersection?
+
 int hasIntersection(point a, point b){
     int rc = 0;
   
@@ -221,11 +214,11 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
     // Initialising squares by user and randomly
     while(true){
-        printf("How many squares would you like to initalize yourself ?\n");
+        printf("How many squares would you like to initalize yourself ? Please introduce an integer.\n");
         scanf("%d",&selfinit_squares);
 
         if(selfinit_squares > SQUARE_COUNT)
-            printf("You can't initialise more than the number of squares, please try again\n");
+            printf("You can't initialise more squares than the predefined number of squares, please try again.\n");
         else
             break;
     }
@@ -264,8 +257,6 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
     }
 
-
-
     k = selfinit_squares;
 
     // Randomly generate the (remaining) squares
@@ -300,8 +291,39 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
         }
         k++;
     }
+}
 
-  return;
+
+int kbhit(void){
+    struct termios oldt, newt;
+    int ch;
+    int oldf;
+
+    //Changing the flags to make getchar() a non blocking operation
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+    //Try to read of character (non-blocking)
+    ch = getchar();
+
+    //Resetting the flags to their old values
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+
+    //If we did manage to read something
+    if(ch != EOF){
+        if(ch == '\n'){
+            //Put back the character on the input stream
+            ungetc(ch, stdin);
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 

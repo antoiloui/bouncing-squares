@@ -1,3 +1,4 @@
+//Including system libraries
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -10,6 +11,7 @@
 #include<stdbool.h>
 #include <errno.h>
 
+//Including user libraries
 #include "process_communication.h"
 
 
