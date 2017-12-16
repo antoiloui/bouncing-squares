@@ -67,8 +67,8 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
     while(readshm(segptr,0).x != 1) {
     
         //Display
-        //printf("\nEnter next cycle\n");
-        //printf("Compute next table\n");
+        printf("\nEnter next cycle\n");
+        printf("Compute next table\n");
 
         for(int id = 1; id <= SQUARE_COUNT; id++){
             unlocksem(workers_semid,id-1);
@@ -81,7 +81,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
         for(int cntr = 0; cntr < SQUARE_COUNT ; cntr++) {
             locksem(posUpdated_semid,0);
         }
-        //printf("All workers updated their position\n");
+        printf("All workers updated their position\n");
 
         //Set allUpdated to true
         allUpdated.x = 1;
@@ -125,10 +125,10 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
     while(readshm(segptr,0).x != 1) {
 
-        //printf("Worker %d is working\n", id);
+        printf("Worker %d is working\n", id);
         locksem(access_semid,0); //wait(accessPositio   nTable)
         //Get current position
-        // printf("Worker %d computing position\n", id);
+        printf("Worker %d computing position\n", id);
 
         current_pos = readshm(segptr,id);
         //Compute next position
@@ -185,7 +185,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
         unlocksem(access_semid,0);//signal(accessPositionTable)
         unlocksem(posUpdated_semid,0); //has updated it's position
-        //printf("Worker %d position updated\n", id);
+        printf("Worker %d position updated\n", id);
 
         locksem(collision_semid,id-1); // Wait for collision
 
