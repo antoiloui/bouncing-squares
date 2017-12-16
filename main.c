@@ -7,7 +7,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <time.h>
-#include<stdbool.h>
+#include <stdbool.h>
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -102,7 +102,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
             printf("Position of square %d : (%d,%d)\n",id,position.x,position.y);
             for(j = 0; j < SQUARE_WIDTH; j++){
                 for(k = 0; k < SQUARE_WIDTH; k++){
-                    table_of_pixels[position.x+j][position.y+k] = 3;
+                    table_of_pixels[position.x+j][position.y+k] = id%4 +1;
                 }
             }
         }
@@ -239,7 +239,7 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
     while(k < selfinit_squares) {
         printf("Square number %d \n",k+1);
-        printf("Please introduce values for the following variables \n");
+        printf("Please introduce integer values for the following variables :\n");
         printf("x = ");
         scanf("%d",&s_x);
         printf("y = ");
@@ -250,18 +250,18 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
         scanf("%d",&s_speedy);
 
 
-        square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy, .color = 3};
+        square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy};
 
         // Check if the coordinates are in the bounds of the grid
         if(s_x + SQUARE_WIDTH <= SIZE_X && s_y + SQUARE_WIDTH <= SIZE_Y) {
             for(int j = 0; j < table_size; j++){
                 if(hasIntersection(new_square, squares_table[j])) { // Check intersection with other squares
-                printf("Squares overlap, please enter new value\n");
+                    printf("Squares overlap, please enter new integer value.\n");
                     continue;
                 }
             }
         }else{
-            printf("Square out of bounds, please enter new values\n");
+            printf("Square out of bounds, please enter new integer values.\n");
             continue;
         }
 
@@ -278,14 +278,13 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
     // Randomly generate the (remaining) squares
     while(k < SQUARE_COUNT) {
 
-        srand(time(NULL));
-
+        //rand()%(max-min)+min
         square new_square = {
         	.x = rand()%(SIZE_X - SQUARE_WIDTH),
             .y = rand()%(SIZE_Y - SQUARE_WIDTH),
             .speedx = rand()% 3 -1,
             .speedy = rand()%3 -1,
-            .color = 3
+            .color = k%4 +1
     	   };
 
         // If no square initialised by the user we push the first random square
@@ -298,13 +297,15 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
         for(int j = 0; j < k; j++){
             // Check intersection with other squares
             if(hasIntersection(new_square, squares_table[j])){
+                printf("New square has intersection, new square is being createt.\n");
                 break;
             }
-            else {
+            else{
+                printf("New square does not have intersection, ok !\n");
                 squares_table[k] = new_square;
-                k++;
             }
         }
+        k++;
     }
 
   return;
@@ -324,6 +325,9 @@ int main(int argc, char** argv){
 	pid_t pid;
     struct mymsgbuf qbuf;
 	point *segptr;
+
+
+    srand(time(NULL));
 
 	//Asking how much squares user wants
 	printf("How many squares running ?\n");
@@ -404,7 +408,7 @@ int main(int argc, char** argv){
     writeshm(segptr,0,finish); //finish = 0;
 
     //Creating SQUARE_COUNT workers
-	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT; cntr++){
+	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT + 1; cntr++){
 		
         pid = fork();
  
@@ -413,11 +417,14 @@ int main(int argc, char** argv){
 			exit(1);
 		}
 		if(pid == 0){
+            /*if(id == SQUARE_COUNT)
+                controller()*/
 			//This is a son
 			int speedx = squares_table[id-1].speedx;
 			int speedy = squares_table[id-1].speedy;
 			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,speedx,speedy);
-      cntr = SQUARE_COUNT;
+            cntr = SQUARE_COUNT;
+
 		}
 		else{
 			//This is the father
@@ -432,7 +439,7 @@ int main(int argc, char** argv){
         for(int j = 0; j < SQUARE_WIDTH; j++){
             for(int k = 0; k < SQUARE_WIDTH; k++){
                 point position = readshm(segptr,id);
-                table_of_pixels[position.x+j][position.y+k] = (id-1) % 4;
+                table_of_pixels[position.x+j][position.y+k] = id%4 +1;
             }
         }
     }
