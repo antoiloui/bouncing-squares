@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <time.h>
+#include <sys/msg.h>
 #include<stdbool.h>
 #include <errno.h>
 
@@ -79,7 +80,7 @@ void unlocksem(int sid, int member){
 **********************************************************************************/
 void createsem(int *sid, key_t key, int members){
 
-    printf("Attempting to create new semaphore set with %d members\n "members);
+    printf("Attempting to create new semaphore set with %d members\n ",members);
 
     if((*sid = semget(key, members, IPC_CREAT|IPC_EXCL|0666)) == -1) {
         fprintf(stderr, "Semaphore set already exists!\n");
@@ -91,7 +92,7 @@ void createqueue(int *msgqueue_id, key_t key_q, int members){
 
     printf("Attempting to create new message queue set with %d members\n",members);
     /* Open the queue - create if necessary */
-    if((msgqueue_id = msgget(key_q, IPC_CREAT|0660)) == -1) {
+    if((*msgqueue_id = msgget(key_q, IPC_CREAT|0660)) == -1) {
         perror("msgget");
         exit(1);
     }
@@ -153,14 +154,14 @@ point readshm(point* segptr, int index){
 *
 **********************************************************************************/
 
-void send_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender, int speed){
+void send_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender,struct speed_s speed){
         /* Send a message to the queue */
        // printf("Sending a message ...\n");
         qbuf->receiver = receiver;
         qbuf->sender = sender;
         qbuf->speed = speed;
 
-        size_t length = sizeof(struct mymsgbuf) - sizeof(int);
+        size_t length = sizeof(struct mymsgbuf) - sizeof(struct speed_s);
         if((msgsnd(qid, (struct mymsgbuf *)qbuf, length, 0)) ==-1){
                 perror("msgsnd");
                 exit(1);
@@ -169,12 +170,13 @@ void send_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender, int s
 /**********************************************************************************
 *
 **********************************************************************************/
-void read_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender, int speed){
+void read_message(int qid, struct mymsgbuf *qbuf, int receiver,int sender){
         /* Read a message from the queue */
        // printf("Reading a message ...\n");
         qbuf->receiver = receiver;
         qbuf->sender = sender;
-        size_t length = sizeof(struct mymsgbuf) - sizeof(int);
+
+        size_t length = sizeof(struct mymsgbuf) - sizeof(struct speed_s);
         msgrcv(qid, (struct mymsgbuf *)qbuf, length, receiver, 0);
         
        // printf("Type: %ld Text: %s\n", qbuf->mtype, qbuf->mtext);

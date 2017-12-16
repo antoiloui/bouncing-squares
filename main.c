@@ -21,7 +21,7 @@
 
 
 /************************************PROTOTYPES****************************************************/
-int hasIntersection(square a, square b); //Returns 1 if the two squares intersect and 0 otherwise
+int hasIntersection(point a, point b); //Returns 1 if the two squares intersect and 0 otherwise
 void initializeSquares(square* squares_table,int SQUARE_COUNT); //Initialize the squares
 int kbhit(void);//Returns 1 if the user pressed a key, and 0 otherwise
 
@@ -109,7 +109,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
 
 
-worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int msgq_id,struct mymsgbuf *qbuf, int speedx, int speedy){
+worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int collision_semid,int msgq_id,struct mymsgbuf *qbuf, int speedx, int speedy){
 
     point next_pos;
     point current_pos;
@@ -119,7 +119,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
         //printf("Worker %d is working\n", id);
         locksem(access_semid,0); //wait(accessPositionTable)
         //Get current position
-       // printf("Worker %d computing position\n", id);
+        // printf("Worker %d computing position\n", id);
 
         current_pos = readshm(segptr,id);
         //Compute next position
@@ -153,27 +153,21 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
         for(size_t other_id = 1; other_id <= SQUARE_COUNT; other_id++){
             if(other_id != id){
                 point other_pos = readshm(segptr,id);
-                if(hasIntersection(next_pos,other_position)){
+                if(hasIntersection(next_pos,other_pos)){
                     if(getval(workers_semid,other_id) == 0){ //if the other has updated it's position
                         unlocksem(collision_semid,other_id-1);//signal(collision_id)
+                        struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
+                        send_message(msgq_id,qbuf, other_id, id,speed);
+                        read_message(msgq_id,qbuf, id, other_id);
+                        speedx = qbuf->speed.speed_x;
+                        speedy = qbuf->speed.speed_y;
+                        next_pos.x = current_pos.x + speedx;
+                        next_pos.y = current_pos.y + speedy;
 
-                        q!(id_collision)// Send vitesse
-                        q?(my_Id) // Receive vitesse
-                        void send_message(qid, struct mymsgbuf *qbuf, receiver, sender, speed){
-                        void read_message(qid, struct mymsgbuf *qbuf, receiver, sender, speed){
-
-
-
-
-                }
-            }          
+                    }
+                }          
+            }
         }
-
-
-
-
-
-
 
 
 
@@ -246,11 +240,13 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
 
         square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy};
+        point new_square_position = {.x = s_x, .y = s_y};
 
         // Check if the coordinates are in the bounds of the grid
         if(s_x + SQUARE_WIDTH <= SIZE_X && s_y + SQUARE_WIDTH <= SIZE_Y) {
             for(int j = 0; j < table_size; j++){
-                if(hasIntersection(new_square, squares_table[j])) { // Check intersection with other squares
+                point square_position = {.x = squares_table[j].x, .y = squares_table[j].y};
+                if(hasIntersection(new_square_position,square_position)) { // Check intersection with other squares
                     printf("Squares overlap, please enter new integer value.\n");
                     continue;
                 }
@@ -287,9 +283,13 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
             continue;
         }
 
+        point new_square_position = {.x = new_square.x, .y = new_square.y};
+
         for(int j = 0; j < k; j++){
+            point square_position = {.x = squares_table[j].x, .y = squares_table[j].y};
+
             // Check intersection with other squares
-            if(hasIntersection(new_square, squares_table[j])){
+            if(hasIntersection(new_square_position, square_position)){
                 printf("New square has intersection, new square is being created.\n");
                 break;
             }
@@ -343,7 +343,7 @@ int main(int argc, char** argv){
 	int workers_semid, access_semid, posUpdated_semid, collision_semid;
     int msgq_id;
     int shmid;
-	key_t key_sem_workers, key_sem_access, key_sem_posUpdated;
+	key_t key_sem_workers, key_sem_access, key_sem_posUpdated, key_sem_collision;
 	key_t key_shm;
     key_t key_q;
 	pid_t pid;
@@ -413,7 +413,7 @@ int main(int argc, char** argv){
 
     //Create a sempahore to signal collision with another square
     createsem(&collision_semid,key_sem_collision ,SQUARE_COUNT);
-    setAal(collision_semid,0);
+    setall(collision_semid,0);
 
     //Create a message queue for workers to exchange their speeds
     createqueue(&msgq_id, key_q, 1);
@@ -447,7 +447,7 @@ int main(int argc, char** argv){
 			//This is a son
 			int speedx = squares_table[id-1].speedx;
 			int speedy = squares_table[id-1].speedy;
-			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,&qbuf,speedx,speedy);
+			worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,&qbuf,speedx,speedy);
             cntr = SQUARE_COUNT +1;
 
 		}
