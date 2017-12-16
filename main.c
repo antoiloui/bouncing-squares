@@ -57,7 +57,7 @@ control_process(point* segptr, int workers_semid, int access_semid, int posUpdat
   
 
 
-master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid) {
+master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid) {
 
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
   int id,j,k;
@@ -186,11 +186,12 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
         unlocksem(access_semid,0);//signal(accessPositionTable)
         unlocksem(posUpdated_semid,0); //has updated it's position
         //printf("Worker %d position updated\n", id);
-        //
+
         locksem(collision_semid,id-1); // Wait for collision
 
         while(readshm(segptr,SQUARE_COUNT+1).x == 0){
             struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
+            int other_id = qbuf->receiver;
             read_message(msgq_id,qbuf,other_id,id); //Read speed
             speedx = qbuf->speed.speed_x; //Update speed
             speedy = qbuf->speed.speed_y;
@@ -498,7 +499,7 @@ int main(int argc, char** argv){
     printf("Initialized\n");
 
 	//We enter the master_process code
-	master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid);
+	master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
 	
 	return 0;
 }
