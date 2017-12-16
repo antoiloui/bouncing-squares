@@ -335,11 +335,11 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
             // Check intersection with other squares
             if(hasIntersection(new_square_position, square_position)){
-                printf("New square has intersection, new square is being created.\n");
+                printf("New square has intersection with square number %d, another one is being created.\n", j);
                 break;
             }
             else{
-                printf("New square does not have intersection, ok !\n");
+                printf("New square does not have intersection, square number %d created!\n", k);
                 squares_table[k] = new_square;
             }
         }
