@@ -36,24 +36,23 @@ control_process(point* segptr, int workers_semid, int access_semid, int posUpdat
     point finish;
 
     if(kbhit()){
-        printf("Enter pressed, program exited.");
+        printf("Enter pressed, program exited.\n");
         finish.x = 1;
         writeshm(segptr,0,finish);
+
+        // Close messages queues
+        remove_queue(msgq_id);
+
+        // Close shared memory
+        remove_shm(shmid);
+
+        //Close semaphores
+        remove_sem(workers_semid);
+        remove_sem(access_semid);
+        remove_sem(posUpdated_semid);
+        remove_sem(collision_semid);
     }
-
-    // Close messages queues
-    remove_queue(msgq_id);
-
-    // Close shared memory
-    remove_shm(shmid);
-
-    //Close semaphores
-    remove_sem(workers_semid);
-    remove_sem(access_semid);
-    remove_sem(posUpdated_semid);
-    remove_sem(collision_semid);
-
-  }
+}
   
   
 
@@ -62,6 +61,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
   int id,j,k;
+  point allUpdated;
   
     //As long as the user doesn't quit
     while(readshm(segptr,0).x != 1) {
@@ -83,8 +83,9 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
         }
         //printf("All workers updated their position\n");
 
-
-        writeshm(segptr,SQUARE_COUNT+1,1); //Set allUpdated to true
+        //Set allUpdated to true
+        allUpdated.x = 1;
+        writeshm(segptr,SQUARE_COUNT+1,allUpdated); 
 
         for(id = 1; id <= SQUARE_COUNT; id++){ //Unlock all semaphores waiting for collision
             unlocksem(collision_semid,id-1);
@@ -188,7 +189,8 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
         //printf("Worker %d position updated\n", id);
 
         locksem(collision_semid,id-1); // Wait for collision
-        while(readshm(segptr,SQUARE_COUNT+1) == 0){
+
+        while(readshm(segptr,SQUARE_COUNT+1).x == 0){
             struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
             int other_id = qbuf->receiver;
             read_message(msgq_id,qbuf,other_id,id); //Read speed
@@ -341,7 +343,7 @@ int kbhit(void){
 
     //If we did manage to read something
     if(ch != EOF){
-        if(ch == '\n'){
+        if(ch == 'a'){
             //Put back the character on the input stream
             ungetc(ch, stdin);
             return 1;
@@ -370,14 +372,18 @@ int main(int argc, char** argv){
     srand(time(NULL));
 
 	//Asking how much squares user wants
-	printf("How many squares running ?\n");
-	int SQUARE_COUNT = 0;
-	scanf("%d", &SQUARE_COUNT);
-    if(SQUARE_COUNT == 0){
-        printf("Can't have 0 squares\n");
-        return 0;
-    }
+    int SQUARE_COUNT = 0;
 
+    while(true){
+        printf("How many squares running ? Please introduce a non-null integer.\n");
+        scanf("%d", &SQUARE_COUNT);
+
+        if(SQUARE_COUNT == 0)
+            printf("Can't have 0 square, please introduce a non-null integer.\n");
+        else
+            break;
+    }
+    
 	//Initialize SQUARE_COUNT number of squares
 	square squares_table[SQUARE_COUNT];
 	initializeSquares(squares_table,SQUARE_COUNT);
