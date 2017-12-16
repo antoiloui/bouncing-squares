@@ -44,7 +44,7 @@ void locksem(int sid, int member){
         if((semop(sid, &sem_lock, 1)) == -1){
                 int errnum = errno;
                 fprintf(stderr, "Lock failed (sem %d of set %d)\n",member,sid);
-                fprintf(stderr, "Value of errno: %d)\n",errno);
+                fprintf(stderr, "Value of errno: %d\n",errno);
                 fprintf(stderr, "Error: %s \n",strerror(errnum));
                 exit(1);
         }
