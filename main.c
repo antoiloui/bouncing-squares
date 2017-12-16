@@ -443,7 +443,7 @@ int main(int argc, char** argv){
 		if(pid == 0){
             //The last son is the control process
             if(id == SQUARE_COUNT)
-                control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid)
+                control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
 			//This is a son
 			int speedx = squares_table[id-1].speedx;
 			int speedy = squares_table[id-1].speedy;
