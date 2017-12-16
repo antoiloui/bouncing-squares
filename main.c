@@ -61,6 +61,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
   int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
   int id,j,k;
+  point allUpdated;
   
     //As long as the user doesn't quit
     while(readshm(segptr,0).x != 1) {
@@ -82,8 +83,9 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
         }
         //printf("All workers updated their position\n");
 
-
-        writeshm(segptr,SQUARE_COUNT+1,1); //Set allUpdated to true
+        //Set allUpdated to true
+        allUpdated.x = 1;
+        writeshm(segptr,SQUARE_COUNT+1,allUpdated); 
 
         for(id = 1; id <= SQUARE_COUNT; id++){ //Unlock all semaphores waiting for collision
             unlocksem(collision_semid,id-1);
@@ -187,7 +189,8 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
         //printf("Worker %d position updated\n", id);
         //
         locksem(collision_semid,id-1); // Wait for collision
-        while(readshm(segptr,SQUARE_COUNT+1) == 0){
+
+        while(readshm(segptr,SQUARE_COUNT+1).x == 0){
             struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
             read_message(msgq_id,qbuf,other_id,id); //Read speed
             speedx = qbuf->speed.speed_x; //Update speed
