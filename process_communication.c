@@ -49,7 +49,7 @@ void locksem(int sid, int member){
                 exit(1);
         }
         else
-                printf("Semaphore(sem %d of set %d) decr. by 1 (locked)\n",member,sid);
+            printf("Semaphore(sem %d of set %d) - 1 , value : %d\n",member,sid,getval(sid,member));
 
 
 }
@@ -72,7 +72,7 @@ void unlocksem(int sid, int member){
                 exit(1);
         }
         else
-            printf("Semaphore(sem %d of set %d) incr. by 1 (unlocked)\n",member,sid);
+            printf("Semaphore(sem %d of set %d) + 1 , value : %d\n",member,sid,getval(sid,member));
 
 }
 
