@@ -72,16 +72,18 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
         printf("\nEnter next cycle\n");
         printf("Compute next table\n");
 
-
         //Wait before all workers have updated their position
         for(int cntr = 0; cntr < SQUARE_COUNT ; cntr++) {
             locksem(posUpdated_semid,0);
             printf("Update %d\n",cntr);
         }
 
-
         printf("All workers updated their position\n");
-
+        //Set allUpdated to true
+        allUpdated.x = 1;
+        writeshm(segptr,2*SQUARE_COUNT+1,allUpdated); 
+        printf("Allupdated put to 1 : %d \n",readshm(segptr,2*SQUARE_COUNT+1).x);
+        
 
         //Unlock all semaphores waiting for collision
         for(id = 1; id <= SQUARE_COUNT; id++){ 
@@ -90,11 +92,6 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
 
         }
         printf("All collisions unlocked\n");
-
-        //Set allUpdated to false
-        allUpdated.x = 0;
-        writeshm(segptr,2*SQUARE_COUNT+1,allUpdated); 
-        printf("Allupdated put to 0 : %d \n",readshm(segptr,2*SQUARE_COUNT+1).x);
 
 
         //Updating the table_of_pixels
@@ -121,6 +118,11 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
         for(id = 1; id <= SQUARE_COUNT; id++){
             writeshm(segptr,SQUARE_COUNT+id,isUpdated);
         }
+
+        //Set allUpdated to false
+        allUpdated.x = 0;
+        writeshm(segptr,2*SQUARE_COUNT+1,allUpdated); 
+        printf("Allupdated put to 0 : %d \n",readshm(segptr,2*SQUARE_COUNT+1).x);
 
         //Unlock all the workers
         for(id = 1; id <= SQUARE_COUNT; id++){
@@ -231,7 +233,7 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
         printf("Worker %d Collision semaphore unlocked (a)\n",id);
 
 
-        printf("allUpdated is : %d\n,",readshm(segptr,2*SQUARE_COUNT+1).x);
+        printf("allUpdated is : %d\n",readshm(segptr,2*SQUARE_COUNT+1).x);
 /*        printf("Worker %d sleeping... \n",id);
 
         usleep(50);
@@ -245,15 +247,14 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
             read_message(msgq_id,&receivebuf,id); //Read speed
             printf("Worker %d Speed received \n",id);
 
+            long other_id = (long)receivebuf.sender; //Get the id of the sender
+            struct speed_s send_speed = {.speed_x = speedx, .speed_y = speedy};
+            struct mymsgbuf sendbuf ={.type = other_id, .sender = id,.speed = send_speed};
+
             speedx = receivebuf.speed.speed_x; //Update speed
             speedy = receivebuf.speed.speed_y;
             printf("Speed received x:%d y:%d \n", speedx, speedy);
-
-
-            long other_id = (long)receivebuf.sender; //Get the id of the sender
-            struct speed_s new_speed = {.speed_x = speedx, .speed_y = speedy};
-            struct mymsgbuf sendbuf ={.type = other_id, .sender = id,.speed = new_speed};   
-                                    
+                              
             send_message(msgq_id,&sendbuf); //Send speed back to sender
             printf("Worker %d Speed sent \n",id);
 
