@@ -159,27 +159,27 @@ point readshm(point* segptr, int index){
 *
 **********************************************************************************/
 
-void send_message(int qid, struct mymsgbuf *qbuf, long type){
-        /* Send a message to the queue */
-       // printf("Sending a message ...\n");
-        qbuf->type = type;
-        size_t length = sizeof(struct mymsgbuf) - sizeof(struct speed_s);
-        if((msgsnd(qid, (struct mymsgbuf *)qbuf, length, 0)) ==-1){
-                perror("msgsnd");
-                exit(1);
-        }
+void send_message(int qid, struct mymsgbuf *qbuf){
+    /* Send a message to the queue */
+   // printf("Sending a message ...\n");
+    int length = sizeof(struct mymsgbuf) - sizeof(long);
+    if((msgsnd(qid, (struct mymsgbuf *)qbuf,length, 0)) ==-1){
+        perror("msgsnd");
+        exit(1);
+    }
 }
 /**********************************************************************************
 *
 **********************************************************************************/
 void read_message(int qid, struct mymsgbuf *qbuf, long type){
-        /* Read a message from the queue */
-       // printf("Reading a message ...\n");
-        qbuf->type = type;
-
-        size_t length = sizeof(struct mymsgbuf) - sizeof(struct speed_s);
-        msgrcv(qid, (struct mymsgbuf *)qbuf, length, type, 0);
-        
+    /* Read a message from the queue */
+   // printf("Reading a message ...\n");
+    int length = sizeof(struct mymsgbuf) - sizeof(long);
+    
+   if((msgrcv(qid, (struct mymsgbuf *)qbuf, length, type, 0)) ==-1){
+        perror("msgrcv");
+        exit(1);
+    } 
        // printf("Type: %ld Text: %s\n", qbuf->mtype, qbuf->mtext);
 }
 

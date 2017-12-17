@@ -144,9 +144,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
     point next_pos;
     point current_pos;
-    struct speed_s speed;
-    struct mymsgbuf sendbuf;
-    struct mymsgbuf receivebuf;
+
 
     while(readshm(segptr,0).x != 1) {
 
@@ -189,16 +187,25 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
             if(other_id != id){
                 point other_pos = readshm(segptr,other_id);
                 if(hasIntersection(next_pos,other_pos)){
+                    printf("Worker %d intersects, is the other one updated? : %d \n",id,getval(workers_semid,other_id));
                     if(getval(workers_semid,other_id) == 0){ //if the other has updated it's position
                         printf("Worker %d collided with worker %d \n", id, other_id);
                         unlocksem(collision_semid,other_id-1);//signal(collision_id)
+                       
+                        struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
+                        struct mymsgbuf sendbuf ={
+                                                .type = other_id,
+                                                .sender = id,
+                                                .speed = speed  // message text 
+                                                };
 
-                        speed = {.speed_x = speedx, .speed_y = speedy};
-                        sendbuf = {.sender = id,.speed = speed};  // message text 
+                        send_message(msgq_id,&sendbuf);
+                        printf("Worker %d Speed sent \n",id);
+                        struct mymsgbuf receivebuf;
 
-                        send_message(msgq_id,(struct mymsgbuf*)&sendbuf, other_id);
+                        read_message(msgq_id,&receivebuf, id);
+                        printf("Worker %d Speed received \n",id);
 
-                        read_message(msgq_id,(struct mymsgbuf*)&receivebuf, id);
                         speedx = receivebuf.speed.speed_x;
                         speedy = receivebuf.speed.speed_y;
                         next_pos.x = current_pos.x + speedx;
@@ -227,15 +234,18 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
             struct mymsgbuf receivebuf; //Container to receive speed
 
             read_message(msgq_id,&receivebuf,id); //Read speed
+            printf("Worker %d Speed received \n",id);
+
             speedx = receivebuf.speed.speed_x; //Update speed
             speedy = receivebuf.speed.speed_y;
             
 
             long other_id = (long)receivebuf.sender; //Get the id of the sender
             struct speed_s new_speed = {.speed_x = speedx, .speed_y = speedy};
-            struct mymsgbuf sendbuf ={.sender = id,.speed = new_speed};   
+            struct mymsgbuf sendbuf ={.type = other_id, .sender = id,.speed = new_speed};   
                                     
-            send_message(msgq_id,&sendbuf,other_id); //Send speed back to sender
+            send_message(msgq_id,&sendbuf); //Send speed back to sender
+            printf("Worker %d Speed sent \n",id);
 
             locksem(collision_semid,id-1); // Wait for collision
             printf("Worker %d Collision semaphore unlocked (b)\n",id);

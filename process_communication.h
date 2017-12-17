@@ -142,11 +142,11 @@ void createqueue(int *msgqueue_id, key_t key_q, int members);
 /**********************************************************************************
 *
 **********************************************************************************/
-void send_message(int qid, struct mymsgbuf *qbuf, long receiver);
+void send_message(int qid, struct mymsgbuf *qbuf);
 /**********************************************************************************
 *
 **********************************************************************************/
-void read_message(int qid, struct mymsgbuf *qbuf, long receiver);
+void read_message(int qid, struct mymsgbuf *qbuf, long type);
 
 /**********************************************************************************
 *
