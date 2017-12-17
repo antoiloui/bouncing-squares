@@ -22,7 +22,7 @@
 
 /************************************PROTOTYPES****************************************************/
 int hasIntersection(point a, point b); //Returns 1 if the two squares intersect and 0 otherwise
-int initializeSquares(square* squares_table,int SQUARE_COUNT); //Initialize the squares
+void initializeSquares(square* squares_table,int SQUARE_COUNT); //Initialize the squares
 //int kbhit(void);//Returns 1 if the user pressed a key, and 0 otherwise
 
 
@@ -55,11 +55,10 @@ control_process(point* segptr, int workers_semid, int access_semid, int posUpdat
   
 */
 
-void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid ) {
+master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid ) {
 
     int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
     int id,j,k;
-
     point allUpdated;
 
     unlocksem(access_semid,0); //Give access to the square table
@@ -67,10 +66,13 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
 
     //As long as the user doesn't quit
     while(readshm(segptr,0).x != 1) {
+
+
         
         //Display
         printf("\nEnter next cycle\n");
         printf("Compute next table\n");
+
 
         //Wait before all workers have updated their position
         for(int cntr = 0; cntr < SQUARE_COUNT ; cntr++) {
@@ -79,6 +81,8 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
         }
 
         printf("All workers updated their position\n");
+
+
         //Set allUpdated to true
         allUpdated.x = 1;
         writeshm(segptr,2*SQUARE_COUNT+1,allUpdated); 
@@ -124,31 +128,30 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
         writeshm(segptr,2*SQUARE_COUNT+1,allUpdated); 
         printf("Allupdated put to 0 : %d \n",readshm(segptr,2*SQUARE_COUNT+1).x);
 
+
+        //Wait a bit
+        usleep(15000); 
+
         //Unlock all the workers
         for(id = 1; id <= SQUARE_COUNT; id++){
             unlocksem(workers_semid,id-1);
         }
-        //Wait a bit
-        usleep(15000);  
 
     }
 }
 
 
 
-void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int collision_semid,int msgq_id, int speedx, int speedy){
+worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int collision_semid,int msgq_id, int speedx, int speedy){
 
     point next_pos;
     point current_pos;
 
-    printf("Worker %d is working\n", id);
 
     while(readshm(segptr,0).x != 1) {
 
-
-        printf("Worker %d wait for accessing the table.\n", id);
+        printf("Worker %d is working\n", id);
         locksem(access_semid,0); //wait(accessPositionTable)
-        printf("Worker %d has access to the table.\n", id);
         
         //Get current position
         printf("Worker %d computing position\n", id);
@@ -191,15 +194,16 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
                         printf("Worker %d collided with worker %d \n", id, other_id);
                         unlocksem(collision_semid,other_id-1);//signal(collision_id)
                        
-                        struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
-                        struct mymsgbuf sendbuf ={
-                                                .type = other_id,
-                                                .sender = id,
-                                                .speed = speed  // message text 
-                                                };
+                        struct speed_s speed;
+                        speed.speed_x = speedx;
+                        speed.speed_y = speedy;
+                        struct mymsgbuf sendbuf;
+                        sendbuf.type = other_id;
+                        sendbuf.sender = id;
+                        sendbuf.speed = speed;    
 
                         send_message(msgq_id,&sendbuf);
-                        printf("Worker %d Speed sent \n",id);
+                        printf("Worker %d sent speed: x:%d y:%d\n",id,speed.speed_x,speed.speed_y);
                         struct mymsgbuf receivebuf;
 
                         read_message(msgq_id,&receivebuf, id);
@@ -233,12 +237,8 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
         printf("Worker %d Collision semaphore unlocked (a)\n",id);
 
 
-        printf("allUpdated is : %d\n",readshm(segptr,2*SQUARE_COUNT+1).x);
-/*        printf("Worker %d sleeping... \n",id);
 
-        usleep(50);
-        printf("Worker %d awoken... \n",id);
-*/
+        printf("allUpdated is : %d\n",readshm(segptr,2*SQUARE_COUNT+1).x);
 
         while(readshm(segptr,2*SQUARE_COUNT+1).x == 0){
             printf("Worker %d INSIDE THE WHILE\n",id);
@@ -248,13 +248,18 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
             printf("Worker %d Speed received \n",id);
 
             long other_id = (long)receivebuf.sender; //Get the id of the sender
+
             struct speed_s send_speed = {.speed_x = speedx, .speed_y = speedy};
             struct mymsgbuf sendbuf ={.type = other_id, .sender = id,.speed = send_speed};
 
+
             speedx = receivebuf.speed.speed_x; //Update speed
             speedy = receivebuf.speed.speed_y;
+
             printf("Speed received x:%d y:%d \n", speedx, speedy);
-                              
+
+            printf("Worker %d sending x:%d y:%d \n",id,send_speed.speed_x,send_speed.speed_y);              
+
             send_message(msgq_id,&sendbuf); //Send speed back to sender
             printf("Worker %d Speed sent \n",id);
 
@@ -263,7 +268,8 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
 
         }
 
-        printf("Worker %d is waiting to reactivate\n",id);
+        printf("Worker %d Waiting to reactivate\n",id);
+
         locksem(workers_semid,id-1); // Wait for the master process
 
     }
@@ -285,7 +291,7 @@ int hasIntersection(point a, point b){
 }
 
 
-int initializeSquares(square* squares_table,int SQUARE_COUNT){
+void initializeSquares(square* squares_table,int SQUARE_COUNT){
   
     // Initialising squares by user and randomly
     int selfinit_squares = 0;
@@ -298,14 +304,15 @@ int initializeSquares(square* squares_table,int SQUARE_COUNT){
     int s_speedy = 0;
 
     // Initialising squares by user and randomly
+    while(true){
         printf("How many squares would you like to initalize yourself ? Please introduce an integer.\n");
         scanf("%d",&selfinit_squares);
 
-        if(selfinit_squares > SQUARE_COUNT){
+        if(selfinit_squares > SQUARE_COUNT)
             printf("You can't initialise more squares than the predefined number of squares, please try again.\n");
-            return -1;
-        }
-        
+        else
+            break;
+    }
 
     while(k < selfinit_squares) {
         printf("Square number %d \n",k+1);
@@ -328,14 +335,15 @@ int initializeSquares(square* squares_table,int SQUARE_COUNT){
             for(int j = 0; j < table_size; j++){
                 point square_position = {.x = squares_table[j].x, .y = squares_table[j].y};
                 if(hasIntersection(new_square_position,square_position)) { // Check intersection with other squares
-                    printf("Squares overlap, please enter new integer value the next time.\n");
-                    return -1;
+                    printf("Squares overlap, please enter new integer value.\n");
+                    continue;
                 }
             }
         }else{
             printf("Square out of bounds, please enter new integer values.\n");
             continue;
         }
+
         squares_table[k] = new_square;
         table_size++;
         k++;
@@ -382,8 +390,6 @@ int initializeSquares(square* squares_table,int SQUARE_COUNT){
         squares_table[k] = new_square;
         k++;
     }
-
-    return 1;
 }
 
 /*
@@ -452,12 +458,7 @@ int main(int argc, char** argv){
     
     //Initialize SQUARE_COUNT number of squares
     square squares_table[SQUARE_COUNT];
-    int correct_initialize = -1;
-
-    while(correct_initialize != 1){
-        correct_initialize = initializeSquares(squares_table,SQUARE_COUNT);
-    }
-    
+    initializeSquares(squares_table,SQUARE_COUNT);
 
 
     key_sem_access = ftok(".", 'A');
@@ -534,6 +535,7 @@ int main(int argc, char** argv){
 
 
 
+
     //Creating SQUARE_COUNT workers
     for(int cntr = 0,id = 1; cntr < SQUARE_COUNT ; cntr++){
         
@@ -565,6 +567,16 @@ int main(int argc, char** argv){
         }
     }
 
+    int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
+
+    for(id = 1; id <= SQUARE_COUNT; id++){
+        for(int j = 0; j < SQUARE_WIDTH; j++){
+            for(int k = 0; k < SQUARE_WIDTH; k++){
+                point position = readshm(segptr,id);
+                table_of_pixels[position.x+j][position.y+k] = id%4 +1;
+            }
+        }
+    }
 
     //Initializes SDL and the colours
     init_output();
