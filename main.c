@@ -22,6 +22,7 @@
 
 /************************************PROTOTYPES****************************************************/
 int hasIntersection(point a, point b); //Returns 1 if the two squares intersect and 0 otherwise
+bool square_intersected(square* squares_table, square new_square, int k); //check if new random square does not already exist
 void initializeSquares(square* squares_table,int SQUARE_COUNT); //Initialize the squares
 //int kbhit(void);//Returns 1 if the user pressed a key, and 0 otherwise
 
@@ -30,7 +31,7 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT); //Initialize the
 /*****************************************PROCESSES**********************************************/
 
 /*
-control_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int msgq_id, int shmid){
+void control_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int msgq_id, int shmid){
     char c;
     point finish = {.x = 1};
 
@@ -55,7 +56,7 @@ control_process(point* segptr, int workers_semid, int access_semid, int posUpdat
   
 */
 
-master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid ) {
+void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid ) {
 
     int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
     int id,j,k;
@@ -142,7 +143,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
 
 
-worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int collision_semid,int msgq_id, int speedx, int speedy){
+void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int collision_semid,int msgq_id, int speedx, int speedy){
 
     point next_pos;
     point current_pos;
@@ -291,6 +292,25 @@ int hasIntersection(point a, point b){
 }
 
 
+
+bool square_intersected(square* squares_table, square new_square, int k){
+
+    point new_square_position = {.x = new_square.x, .y = new_square.y};
+
+    for(int j = 0; j < k; j++){
+
+        point square_position = {.x = squares_table[j].x, .y = squares_table[j].y};
+
+        if(hasIntersection(new_square_position, square_position)){
+            printf("New square has intersection with square number %d, another one is being created.\n", j);
+            return true;
+        }
+    }
+    printf("New square does not have any intersection !\n");
+    return false;
+}
+
+
 void initializeSquares(square* squares_table,int SQUARE_COUNT){
   
     // Initialising squares by user and randomly
@@ -371,24 +391,16 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
             continue;
         }
 
-        point new_square_position = {.x = new_square.x, .y = new_square.y};
 
-        // Check intersection with other squares
-        for(int j = 0; j < k; j++){
-            point square_position = {.x = squares_table[j].x, .y = squares_table[j].y};
-
-            if(hasIntersection(new_square_position, square_position)){
-                printf("New square has intersection with square number %d, another one is being created.\n", j);
-                break;
-            }
-            else{
-                printf("New square does not have intersection with square number %d!\n", j);
-            }
-        }
-        //If there is none, we append the new square to the table
-        printf("Square number %d is being created.\n", k);
-        squares_table[k] = new_square;
-        k++;
+        if(square_intersected(squares_table, new_square, k))
+            //If there is, we loop again
+            continue;
+        else{
+            //If there is none, we append the new square to the table
+            printf("Square number %d is being created.\n", k);
+            squares_table[k] = new_square;
+            k++;
+        } 
     }
 }
 
