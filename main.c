@@ -145,14 +145,16 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
     point next_pos;
     point current_pos;
 
+
     while(readshm(segptr,0).x != 1) {
 
         printf("Worker %d is working\n", id);
-        locksem(access_semid,0); //wait(accessPositio   nTable)
+        locksem(access_semid,0); //wait(accessPositionTable)
+        
         //Get current position
         printf("Worker %d computing position\n", id);
-
         current_pos = readshm(segptr,id);
+
         //Compute next position
         next_pos.x = current_pos.x + speedx;
         next_pos.y = current_pos.y + speedy;
@@ -189,7 +191,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
                     if(getval(workers_semid,other_id) == 0){ //if the other has updated it's position
                         printf("Worker %d collided with worker %d \n", id, other_id);
                         unlocksem(collision_semid,other_id-1);//signal(collision_id)
-
+                       
                         struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
                         struct mymsgbuf sendbuf ={
                                                 .type = other_id,
