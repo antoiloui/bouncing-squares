@@ -60,6 +60,8 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
     int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
     int id,j,k;
 
+    point allUpdated;
+
     unlocksem(access_semid,0); //Give access to the square table
     printf("Access given to one worker\n");
 
