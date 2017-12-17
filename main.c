@@ -238,7 +238,7 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
         printf("Worker %d awoken... \n",id);
 */
 
-        while(readshm(segptr,SQUARE_COUNT+1).x == 0){
+        while(readshm(segptr,2*SQUARE_COUNT+1).x == 0){
             printf("Worker %d INSIDE THE WHILE\n",id);
             struct mymsgbuf receivebuf; //Container to receive speed
 
