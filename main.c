@@ -216,8 +216,8 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
                         next_pos.x = current_pos.x + speedx;
                         next_pos.y = current_pos.y + speedy;
                         printf("Next position received: %d %d \n", next_pos.x, next_pos.y);
-
-
+                        other_id = 0;
+                        continue;
                     }
                 }          
             }
