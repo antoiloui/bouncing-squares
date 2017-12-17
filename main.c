@@ -67,10 +67,10 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
         //Set allUpdated to false
         allUpdated.x = 0;
         writeshm(segptr,SQUARE_COUNT+1,allUpdated); 
-        printf("Allupdated put to 0, check : allUpdated = %d \n",readshm(segptr,SQUARE_COUNT+1).x);
+        printf("Allupdated put to 0 : %d \n",readshm(segptr,SQUARE_COUNT+1).x);
         
         //Display
-        printf("\nEnter master process : next cycle\n");
+        printf("\nEnter next cycle\n");
         printf("Compute next table\n");
 
 
@@ -93,8 +93,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
         //Set allUpdated to true
         allUpdated.x = 1;
-        writeshm(segptr,SQUARE_COUNT+1, allUpdated);
-        printf("Allupdated put to 1, check : allUpdated = %d \n",readshm(segptr,SQUARE_COUNT+1).x);
+        writeshm(segptr,SQUARE_COUNT+1, allUpdated); 
 
         //usleep(5000);    
 
@@ -123,6 +122,11 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
                 }
             }
         }
+
+        //usleep(5000);    
+
+
+
 
         //Apply the change on SDL display
         update_output(table_of_pixels);
@@ -222,7 +226,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
         locksem(collision_semid,id-1); // Wait for collision
         printf("Worker %d Collision semaphore unlocked (a)\n",id);
 
-        printf("In the process, allUpdated is : %d\n",readshm(segptr,SQUARE_COUNT+1).x);
+        printf("allUpdated is : %d\n,",readshm(segptr,SQUARE_COUNT+1).x);
         while(readshm(segptr,SQUARE_COUNT+1).x == 0){
             
             struct mymsgbuf receivebuf; //Container to receive speed
@@ -247,6 +251,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
         }
 
         printf("Worker %d Waiting to reactivate\n",id);
+
         locksem(workers_semid,id-1); // Wait for the master process
 
     }
