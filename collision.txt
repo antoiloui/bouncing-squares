@@ -1,0 +1,313 @@
+
+Enter next cycle
+Compute next table
+Access given to one worker
+Update 0
+Update 1
+Worker 3 is working
+Update 2
+Update 3
+Worker 3 computing position
+Update 4
+Update 5
+Worker 3 has released access
+Update 6
+Worker 3 position updated
+All workers updated their position
+Unlocking collision 1
+Unlocking collision 2
+Worker 2 Collision semaphore unlocked (a)
+Worker 1 Collision semaphore unlocked (a)
+allUpdated is : 1
+allUpdated is : 1
+,Worker 2 Waiting to reactivate
+,Worker 1 Waiting to reactivate
+Worker 2 is working
+Worker 1 is working
+Worker 2 computing position
+Worker 1 computing position
+Worker 1 has released access
+Worker 2 has released access
+Worker 1 position updated
+Worker 2 position updated
+Unlocking collision 3
+Worker 3 Collision semaphore unlocked (a)
+allUpdated is : 1
+,Worker 3 Waiting to reactivate
+Unlocking collision 4
+Unlocking collision 5
+Worker 5 Collision semaphore unlocked (a)
+allUpdated is : 1
+Worker 4 Collision semaphore unlocked (a)
+,Worker 5 Waiting to reactivate
+allUpdated is : 1
+Worker 5 is working
+,Worker 4 Waiting to reactivate
+Worker 5 computing position
+Worker 4 is working
+Worker 5 has released access
+Worker 4 computing position
+Worker 5 position updated
+Worker 4 collided with worker 2
+Unlocking collision 6
+Worker 6 Collision semaphore unlocked (a)
+allUpdated is : 1
+,Worker 6 Waiting to reactivate
+Worker 6 is working
+Worker 6 computing position
+Worker 6 has released access
+Worker 2 Collision semaphore unlocked (a)
+Worker 6 position updated
+allUpdated is : 1
+,Worker 2 Waiting to reactivate
+Unlocking collision 7
+All collisions unlocked
+Worker 7 Collision semaphore unlocked (a)
+allUpdated is : 1
+,Worker 7 Waiting to reactivate
+Worker 7 is working
+Worker 7 computing position
+Worker 7 has released access
+Worker 7 position updated
+Position of square 1 : (219,182)
+Position of square 2 : (30,181)
+Position of square 3 : (12,155)
+Position of square 4 : (40,196)
+Position of square 5 : (131,156)
+Position of square 6 : (73,35)
+Position of square 7 : (136,70)
+Allupdated put to 0? : 0
+
+Enter next cycle
+Compute next table
+Worker 3 is working
+Worker 2 is working
+Worker 3 computing position
+Worker 2 computing position
+Worker 3 has released access
+Worker 2 collided with worker 4
+Worker 3 position updated
+Access given to one worker
+Update 0
+Update 1
+Update 2
+Worker 2 has released access
+Update 3
+Worker 2 position updated
+Update 4
+Update 5
+Update 6
+All workers updated their position
+Worker 4 has released access
+Worker 4 position updated
+Worker 4 Collision semaphore unlocked (a)
+allUpdated is : 0
+Unlocking collision 1
+Unlocking collision 2
+Worker 2 Collision semaphore unlocked (a)
+Worker 1 Collision semaphore unlocked (a)
+allUpdated is : 1
+allUpdated is : 1
+,Worker 2 Waiting to reactivate
+,Worker 1 Waiting to reactivate
+Worker 1 is working
+Unlocking collision 3
+Worker 1 computing position
+Worker 1 has released access
+Worker 3 Collision semaphore unlocked (a)
+Worker 1 position updated
+allUpdated is : 1
+,Worker 3 Waiting to reactivate
+Unlocking collision 4
+Unlocking collision 5
+Worker 5 Collision semaphore unlocked (a)
+allUpdated is : 1
+,Worker 5 Waiting to reactivate
+Worker 5 is working
+Worker 5 computing position
+Worker 5 has released access
+Worker 5 position updated
+Unlocking collision 6
+Unlocking collision 7
+Worker 6 Collision semaphore unlocked (a)
+Worker 7 Collision semaphore unlocked (a)
+allUpdated is : 1
+allUpdated is : 1
+,Worker 6 Waiting to reactivate
+,Worker 7 Waiting to reactivate
+Worker 6 is working
+Worker 7 is working
+Worker 6 computing position
+Worker 7 computing position
+Worker 6 has released access
+Worker 7 has released access
+Worker 6 position updated
+Worker 7 position updated
+All collisions unlocked
+Position of square 1 : (220,182)
+Position of square 2 : (30,180)
+Position of square 3 : (13,155)
+Position of square 4 : (39,197)
+Position of square 5 : (132,156)
+Position of square 6 : (72,34)
+Position of square 7 : (135,71)
+Allupdated put to 0? : 0
+
+Enter next cycle
+Compute next table
+Worker 3 is working
+Worker 2 is working
+Worker 3 computing position
+Worker 2 computing position
+Worker 3 has released access
+Worker 2 has released access
+Worker 3 position updated
+Worker 2 position updated
+Access given to one worker
+Update 0
+Update 1
+Update 2
+Update 3
+Update 4
+Update 5
+Update 6
+All workers updated their position
+Unlocking collision 1
+Unlocking collision 2
+Worker 2 Collision semaphore unlocked (a)
+allUpdated is : 1
+Worker 1 Collision semaphore unlocked (a)
+,Worker 2 Waiting to reactivate
+allUpdated is : 1
+,Worker 1 Waiting to reactivate
+Worker 1 is working
+Unlocking collision 3
+Worker 1 computing position
+Worker 1 has released access
+Worker 3 Collision semaphore unlocked (a)
+Worker 1 position updated
+allUpdated is : 1
+,Worker 3 Waiting to reactivate
+Unlocking collision 4
+Unlocking collision 5
+Worker 5 Collision semaphore unlocked (a)
+allUpdated is : 1
+,Worker 5 Waiting to reactivate
+Worker 5 is working
+Worker 5 computing position
+Worker 5 has released access
+Worker 5 position updated
+Unlocking collision 6
+Unlocking collision 7
+Worker 6 Collision semaphore unlocked (a)
+allUpdated is : 1
+,Worker 6 Waiting to reactivate
+Worker 7 Collision semaphore unlocked (a)
+Worker 6 is working
+allUpdated is : 1
+Worker 6 computing position
+,Worker 7 Waiting to reactivate
+Worker 6 has released access
+Worker 7 is working
+Worker 6 position updated
+Worker 7 computing position
+Worker 7 has released access
+Worker 7 position updated
+All collisions unlocked
+Position of square 1 : (221,182)
+Position of square 2 : (30,179)
+Position of square 3 : (14,155)
+Position of square 4 : (39,197)
+Position of square 5 : (133,156)
+Position of square 6 : (71,33)
+Position of square 7 : (134,72)
+Allupdated put to 0? : 0
+
+Enter next cycle
+Compute next table
+Worker 3 is working
+Worker 2 is working
+Worker 3 computing position
+Worker 2 computing position
+Worker 3 has released access
+Worker 2 has released access
+Worker 3 position updated
+Worker 2 position updated
+Access given to one worker
+Update 0
+Update 1
+Update 2
+Update 3
+Update 4
+Update 5
+Update 6
+All workers updated their position
+Unlocking collision 1
+Unlocking collision 2
+Worker 2 Collision semaphore unlocked (a)
+Worker 1 Collision semaphore unlocked (a)
+allUpdated is : 1
+allUpdated is : 1
+,Worker 2 Waiting to reactivate
+,Worker 1 Waiting to reactivate
+Worker 1 is working
+Worker 1 computing position
+Unlocking collision 3
+Worker 1 has released access
+Worker 1 position updated
+Worker 3 Collision semaphore unlocked (a)
+allUpdated is : 1
+,Worker 3 Waiting to reactivate
+Unlocking collision 4
+Unlocking collision 5
+Unlocking collision 6
+Unlocking collision 7
+Worker 5 Collision semaphore unlocked (a)
+allUpdated is : 1
+,Worker 5 Waiting to reactivate
+Worker 5 is working
+Worker 7 Collision semaphore unlocked (a)
+Worker 5 computing position
+allUpdated is : 1
+Worker 5 has released access
+,Worker 7 Waiting to reactivate
+Worker 6 Collision semaphore unlocked (a)
+allUpdated is : 1
+Worker 7 is working
+,Worker 6 Waiting to reactivate
+Worker 7 computing position
+Worker 6 is working
+Worker 7 has released access
+Worker 6 computing position
+Worker 7 position updated
+Worker 6 has released access
+Worker 6 position updated
+All collisions unlocked
+Worker 5 position updated
+Position of square 1 : (222,182)
+Position of square 2 : (30,178)
+Position of square 3 : (15,155)
+Position of square 4 : (39,197)
+Position of square 5 : (134,156)
+Position of square 6 : (70,32)
+Position of square 7 : (133,73)
+Allupdated put to 0? : 0
+
+Enter next cycle
+Compute next table
+Worker 3 is working
+Worker 2 is working
+Worker 3 computing position
+Worker 2 computing position
+Worker 3 has released access
+Worker 2 has released access
+Worker 3 position updated
+Worker 2 position updated
+Access given to one worker
+Update 0
+Update 1
+Update 2
+Update 3
+Update 4
+Update 5
+
