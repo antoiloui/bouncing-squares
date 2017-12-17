@@ -61,10 +61,13 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
     int id,j,k;
     point allUpdated;
 
-
-
     //As long as the user doesn't quit
     while(readshm(segptr,0).x != 1) {
+
+        //Set allUpdated to false
+        allUpdated.x = 0;
+        writeshm(segptr,SQUARE_COUNT+1,allUpdated); 
+        printf("Allupdated put to 0 : %d \n",readshm(segptr,SQUARE_COUNT+1).x);
         
         //Display
         printf("\nEnter next cycle\n");
@@ -129,11 +132,6 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
         update_output(table_of_pixels);
         //Wait a bit
         usleep(50000);    
-
-        //Set allUpdated to false
-        allUpdated.x = 0;
-        writeshm(segptr,SQUARE_COUNT+1,allUpdated); 
-        printf("Allupdated put to 0? : %d \n",readshm(segptr,SQUARE_COUNT+1).x);
 
     }
 }
@@ -516,6 +514,17 @@ int main(int argc, char** argv){
     writeshm(segptr,SQUARE_COUNT + 1,allUpdated); //finish = 0;
 
 
+    int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
+
+    for(id = 1; id <= SQUARE_COUNT; id++){
+        for(int j = 0; j < SQUARE_WIDTH; j++){
+            for(int k = 0; k < SQUARE_WIDTH; k++){
+                point position = readshm(segptr,id);
+                table_of_pixels[position.x+j][position.y+k] = id%4 +1;
+            }
+        }
+    }
+
     //Creating SQUARE_COUNT workers
     for(int cntr = 0,id = 1; cntr < SQUARE_COUNT ; cntr++){
         
@@ -545,28 +554,13 @@ int main(int argc, char** argv){
             //This is the father
             id++;
         }
-    } 
-
-
-
-    int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
-
-    for(id = 1; id <= SQUARE_COUNT; id++){
-        for(int j = 0; j < SQUARE_WIDTH; j++){
-            for(int k = 0; k < SQUARE_WIDTH; k++){
-                point position = readshm(segptr,id);
-                table_of_pixels[position.x+j][position.y+k] = id%4 +1;
-            }
-        }
     }
+    if(pid != 0)
+        master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
 
     //Initializes SDL and the colours
     init_output();
     printf("Initialized\n");
-
-    if(pid != 0)
-        master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
-
 
     return 0;
 }
