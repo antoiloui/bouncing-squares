@@ -30,7 +30,7 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT); //Initialize the
 /*****************************************PROCESSES**********************************************/
 
 /*
-void control_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int msgq_id, int shmid){
+control_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int msgq_id, int shmid){
     char c;
     point finish = {.x = 1};
 
@@ -61,16 +61,16 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
     int id,j,k;
     point allUpdated;
 
+    unlocksem(access_semid,0); //Give access to the square table
+    printf("Access given to one worker\n");
+
     //As long as the user doesn't quit
     while(readshm(segptr,0).x != 1) {
 
-        //Set allUpdated to false
-        allUpdated.x = 0;
-        writeshm(segptr,SQUARE_COUNT+1,allUpdated); 
-        printf("Allupdated put to 0, check : allUpdated = %d \n",readshm(segptr,SQUARE_COUNT+1).x);
+
         
         //Display
-        printf("\nEnter master process : next cycle\n");
+        printf("\nEnter next cycle\n");
         printf("Compute next table\n");
 
 
@@ -78,24 +78,23 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
             unlocksem(workers_semid,id-1);
         }
 
-        unlocksem(access_semid,0); //Give access to the square table
-        printf("Access given to one worker\n");
+
 
 
         //Wait before all workers have updated their position
         for(int cntr = 0; cntr < SQUARE_COUNT ; cntr++) {
             locksem(posUpdated_semid,0);
             printf("Update %d\n",cntr);
-
         }
+        
         printf("All workers updated their position\n");
-   
+        usleep(5000);    
 
         //Set allUpdated to true
         allUpdated.x = 1;
-        writeshm(segptr,SQUARE_COUNT+1, allUpdated);
-        printf("Allupdated put to 1, check : allUpdated = %d \n",readshm(segptr,SQUARE_COUNT+1).x);
-  
+        writeshm(segptr,SQUARE_COUNT+1, allUpdated); 
+
+        usleep(5000);    
 
         //Unlock all semaphores waiting for collision
         for(id = 1; id <= SQUARE_COUNT; id++){ 
@@ -123,10 +122,20 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
             }
         }
 
+        usleep(5000);    
+
+
+
         //Apply the change on SDL display
         update_output(table_of_pixels);
         //Wait a bit
-        usleep(15000);    
+        usleep(50000);  
+
+        //Set allUpdated to false
+        allUpdated.x = 0;
+        writeshm(segptr,SQUARE_COUNT+1,allUpdated); 
+        printf("Allupdated put to 0 : %d \n",readshm(segptr,SQUARE_COUNT+1).x);
+  
 
     }
 }
@@ -221,7 +230,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
         locksem(collision_semid,id-1); // Wait for collision
         printf("Worker %d Collision semaphore unlocked (a)\n",id);
 
-        printf("In the process before the while, allUpdated is : %d\n",readshm(segptr,SQUARE_COUNT+1).x);
+        printf("allUpdated is : %d\n,",readshm(segptr,SQUARE_COUNT+1).x);
         while(readshm(segptr,SQUARE_COUNT+1).x == 0){
             
             struct mymsgbuf receivebuf; //Container to receive speed
@@ -362,7 +371,7 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
             }
         }
         //If there is none, we append the new square to the table
-        printf("Square number %d is being created.", k);
+        printf("Square number %d is being created.\n", k);
         squares_table[k] = new_square;
         k++;
     }
@@ -508,17 +517,6 @@ int main(int argc, char** argv){
     writeshm(segptr,SQUARE_COUNT + 1,allUpdated); //finish = 0;
 
 
-    int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
-
-    for(id = 1; id <= SQUARE_COUNT; id++){
-        for(int j = 0; j < SQUARE_WIDTH; j++){
-            for(int k = 0; k < SQUARE_WIDTH; k++){
-                point position = readshm(segptr,id);
-                table_of_pixels[position.x+j][position.y+k] = id%4 +1;
-            }
-        }
-    }
-
     //Creating SQUARE_COUNT workers
     for(int cntr = 0,id = 1; cntr < SQUARE_COUNT ; cntr++){
         
@@ -549,12 +547,14 @@ int main(int argc, char** argv){
             id++;
         }
     }
-    if(pid != 0)
-        master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
 
     //Initializes SDL and the colours
     init_output();
     printf("Initialized\n");
+
+    if(pid != 0)
+        master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
+
 
     return 0;
 }
