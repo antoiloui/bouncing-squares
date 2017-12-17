@@ -63,12 +63,14 @@ process_worker(id) {
 							q!(id_collision)// Send vitesse
 							q?(my_Id) // Receive vitesse
 							speed2 = speed1;
-							update_position
+							
 					else
 						nothing
 
 			store_position
 
+		update_position
+		isUpdated;
 		signal(accessPositionTable);
 		signal(hasUpdated)
 		

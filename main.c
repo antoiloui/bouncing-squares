@@ -59,43 +59,35 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
     int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
     int id,j,k;
-    point allUpdated;
+
+    unlocksem(access_semid,0); //Give access to the square table
+    printf("Access given to one worker\n");
 
     //As long as the user doesn't quit
     while(readshm(segptr,0).x != 1) {
 
-        //Set allUpdated to false
-        allUpdated.x = 0;
-        writeshm(segptr,SQUARE_COUNT+1,allUpdated); 
-        printf("Allupdated put to 0 : %d \n",readshm(segptr,SQUARE_COUNT+1).x);
+
         
         //Display
         printf("\nEnter next cycle\n");
         printf("Compute next table\n");
 
 
-        for(int id = 1; id <= SQUARE_COUNT; id++){
-            unlocksem(workers_semid,id-1);
-        }
 
-        unlocksem(access_semid,0); //Give access to the square table
-        printf("Access given to one worker\n");
 
 
         //Wait before all workers have updated their position
         for(int cntr = 0; cntr < SQUARE_COUNT ; cntr++) {
             locksem(posUpdated_semid,0);
             printf("Update %d\n",cntr);
-
         }
+
         printf("All workers updated their position\n");
-        //usleep(5000);    
 
         //Set allUpdated to true
-        allUpdated.x = 1;
-        writeshm(segptr,SQUARE_COUNT+1, allUpdated); 
+        point allUpdated = {.x = 1};
+        writeshm(segptr,2*SQUARE_COUNT+1,allUpdated); 
 
-        //usleep(5000);    
 
         //Unlock all semaphores waiting for collision
         for(id = 1; id <= SQUARE_COUNT; id++){ 
@@ -104,6 +96,11 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
         }
         printf("All collisions unlocked\n");
+
+        //Set allUpdated to false
+        allUpdated.x = 0;
+        writeshm(segptr,2*SQUARE_COUNT+1,allUpdated); 
+        printf("Allupdated put to 0 : %d \n",readshm(segptr,2*SQUARE_COUNT+1).x);
 
 
         //Updating the table_of_pixels
@@ -123,15 +120,21 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
             }
         }
 
-        //usleep(5000);    
-
-
-
-
         //Apply the change on SDL display
         update_output(table_of_pixels);
+
+        point isUpdated = {.x = 0}; //Set isUpdated tag for every worker to false
+        for(id = 1; id <= SQUARE_COUNT; id++){
+            writeshm(segptr,SQUARE_COUNT+id,isUpdated);
+        }
+
+        //Unlock all the workers
+        for(id = 1; id <= SQUARE_COUNT; id++){
+            unlocksem(workers_semid,id-1);
+        }
         //Wait a bit
-        usleep(50000);    
+        usleep(15000);  
+
 
     }
 }
@@ -185,8 +188,8 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
             if(other_id != id){
                 point other_pos = readshm(segptr,other_id);
                 if(hasIntersection(next_pos,other_pos)){
-                    printf("Worker %d intersects, is the other one updated? : %d \n",id,getval(workers_semid,other_id));
-                    if(getval(workers_semid,other_id) == 0){ //if the other has updated it's position
+                    printf("Worker %d intersects, is the other one updated? : %d \n",id,readshm(segptr,SQUARE_COUNT+other_id).x);
+                    if(readshm(segptr,SQUARE_COUNT+other_id).x == 1){ //if the other has updated it's position
                         printf("Worker %d collided with worker %d \n", id, other_id);
                         unlocksem(collision_semid,other_id-1);//signal(collision_id)
                        
@@ -206,8 +209,11 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
                         speedx = receivebuf.speed.speed_x;
                         speedy = receivebuf.speed.speed_y;
+                        printf("Speed received x:%d y:%d \n", speedx, speedy);
                         next_pos.x = current_pos.x + speedx;
                         next_pos.y = current_pos.y + speedy;
+                        printf("Next position received: %d %d \n", next_pos.x, next_pos.y);
+
 
                     }
                 }          
@@ -216,19 +222,26 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
 
         writeshm(segptr,id,next_pos); //Update position
+        point isUpdated = {.x = 1};
+        writeshm(segptr,SQUARE_COUNT+id,isUpdated);
 
         unlocksem(access_semid,0);//signal(accessPositionTable)
         printf("Worker %d has released access\n", id);
 
-        unlocksem(posUpdated_semid,0); //has updated it's position
+        unlocksem(posUpdated_semid,0); //has updated it's position/ is also counter
         printf("Worker %d position updated\n", id);
 
         locksem(collision_semid,id-1); // Wait for collision
         printf("Worker %d Collision semaphore unlocked (a)\n",id);
 
-        printf("allUpdated is : %d\n,",readshm(segptr,SQUARE_COUNT+1).x);
+        printf("allUpdated is : %d\n,",readshm(segptr,2*SQUARE_COUNT+1).x);
+/*        printf("Worker %d sleeping... \n",id);
+
+        usleep(50);
+        printf("Worker %d awoken... \n",id);
+*/
         while(readshm(segptr,SQUARE_COUNT+1).x == 0){
-            
+            printf("Worker %d INSIDE THE WHILE\n",id);
             struct mymsgbuf receivebuf; //Container to receive speed
 
             read_message(msgq_id,&receivebuf,id); //Read speed
@@ -236,7 +249,8 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
             speedx = receivebuf.speed.speed_x; //Update speed
             speedy = receivebuf.speed.speed_y;
-            
+            printf("Speed received x:%d y:%d \n", speedx, speedy);
+
 
             long other_id = (long)receivebuf.sender; //Get the id of the sender
             struct speed_s new_speed = {.speed_x = speedx, .speed_y = speedy};
@@ -368,7 +382,7 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
             }
         }
         //If there is none, we append the new square to the table
-        printf("Square number %d is being created.", k);
+        printf("Square number %d is being created.\n", k);
         squares_table[k] = new_square;
         k++;
     }
@@ -451,8 +465,8 @@ int main(int argc, char** argv){
     key_q = ftok(".", 'Q');
 
     //We need to put the square table in shared memory, as well
-    // as finish [finish, SQ1, SQ2, SQ3, ...] and allUpdated
-    int shmsize = SQUARE_COUNT*sizeof(square) + 2;
+    // as finish [finish, SQ1, SQ2, SQ3, ...isUpdated1,isUpdated2,...,allUpdated]
+    int shmsize = 2*SQUARE_COUNT*sizeof(square) + 2;
 
     /* Open the shared memory segment - create if necessary */
     if((shmid = shmget(key_shm,shmsize, IPC_CREAT|IPC_EXCL|0666)) == -1) {
@@ -506,24 +520,17 @@ int main(int argc, char** argv){
     //Put the squares position into shared memory
     for(id = 1; id <= SQUARE_COUNT; id++){
         point position = {.x = squares_table[id-1].x, .y = squares_table[id-1].y};
+        point isUpdated =  {.x = 0, .y = 0};
         writeshm(segptr,id,position);
+        writeshm(segptr,SQUARE_COUNT+id,isUpdated);
     }
 
 
     point allUpdated = {.x = 0,.y = 0}; // allUpdated is false
-    writeshm(segptr,SQUARE_COUNT + 1,allUpdated); //finish = 0;
+    writeshm(segptr,2*SQUARE_COUNT + 1,allUpdated); //finish = 0;
 
 
-    int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
-    for(id = 1; id <= SQUARE_COUNT; id++){
-        for(int j = 0; j < SQUARE_WIDTH; j++){
-            for(int k = 0; k < SQUARE_WIDTH; k++){
-                point position = readshm(segptr,id);
-                table_of_pixels[position.x+j][position.y+k] = id%4 +1;
-            }
-        }
-    }
 
     //Creating SQUARE_COUNT workers
     for(int cntr = 0,id = 1; cntr < SQUARE_COUNT ; cntr++){
@@ -555,12 +562,25 @@ int main(int argc, char** argv){
             id++;
         }
     }
-    if(pid != 0)
-        master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
+
+    int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
+
+    for(id = 1; id <= SQUARE_COUNT; id++){
+        for(int j = 0; j < SQUARE_WIDTH; j++){
+            for(int k = 0; k < SQUARE_WIDTH; k++){
+                point position = readshm(segptr,id);
+                table_of_pixels[position.x+j][position.y+k] = id%4 +1;
+            }
+        }
+    }
 
     //Initializes SDL and the colours
     init_output();
     printf("Initialized\n");
+
+    if(pid != 0)
+        master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
+
 
     return 0;
 }
