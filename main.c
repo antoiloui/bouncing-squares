@@ -30,7 +30,7 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT); //Initialize the
 /*****************************************PROCESSES**********************************************/
 
 /*
-control_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int msgq_id, int shmid){
+void control_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int msgq_id, int shmid){
     char c;
     point finish = {.x = 1};
 
@@ -89,14 +89,13 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
 
         }
         printf("All workers updated their position\n");
-        //usleep(5000);    
+   
 
         //Set allUpdated to true
         allUpdated.x = 1;
         writeshm(segptr,SQUARE_COUNT+1, allUpdated);
         printf("Allupdated put to 1, check : allUpdated = %d \n",readshm(segptr,SQUARE_COUNT+1).x);
-
-        //usleep(5000);    
+  
 
         //Unlock all semaphores waiting for collision
         for(id = 1; id <= SQUARE_COUNT; id++){ 
@@ -127,7 +126,7 @@ master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_sem
         //Apply the change on SDL display
         update_output(table_of_pixels);
         //Wait a bit
-        usleep(50000);    
+        usleep(15000);    
 
     }
 }
@@ -222,7 +221,7 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
         locksem(collision_semid,id-1); // Wait for collision
         printf("Worker %d Collision semaphore unlocked (a)\n",id);
 
-        printf("In the process, allUpdated is : %d\n",readshm(segptr,SQUARE_COUNT+1).x);
+        printf("In the process before the while, allUpdated is : %d\n",readshm(segptr,SQUARE_COUNT+1).x);
         while(readshm(segptr,SQUARE_COUNT+1).x == 0){
             
             struct mymsgbuf receivebuf; //Container to receive speed
