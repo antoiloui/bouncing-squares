@@ -348,19 +348,21 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
         point new_square_position = {.x = new_square.x, .y = new_square.y};
 
+        // Check intersection with other squares
         for(int j = 0; j < k; j++){
             point square_position = {.x = squares_table[j].x, .y = squares_table[j].y};
 
-            // Check intersection with other squares
             if(hasIntersection(new_square_position, square_position)){
                 printf("New square has intersection with square number %d, another one is being created.\n", j);
                 break;
             }
             else{
-                printf("New square does not have intersection, square number %d created!\n", k);
-                squares_table[k] = new_square;
+                printf("New square does not have intersection with square number %d!\n", j);
             }
         }
+        //If there is none, we append the new square to the table
+        printf("Square number %d is being created.", k);
+        squares_table[k] = new_square;
         k++;
     }
 }
@@ -520,9 +522,10 @@ int main(int argc, char** argv){
                 //This is a son
                 int speedx = squares_table[id-1].speedx;
                 int speedy = squares_table[id-1].speedy;
+                printf("WORKER          id = %d\n", id);
                 worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,speedx,speedy);
             } else{
-               
+                printf("CONTROLER          id = %d \n", id);
                 //control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
             }
                 
