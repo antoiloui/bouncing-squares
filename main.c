@@ -144,15 +144,19 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
 
     point next_pos;
     point current_pos;
+    struct speed_s speed;
+    struct mymsgbuf sendbuf;
+    struct mymsgbuf receivebuf;
 
     while(readshm(segptr,0).x != 1) {
 
         printf("Worker %d is working\n", id);
-        locksem(access_semid,0); //wait(accessPositio   nTable)
+        locksem(access_semid,0); //wait(accessPositionTable)
+        
         //Get current position
         printf("Worker %d computing position\n", id);
-
         current_pos = readshm(segptr,id);
+
         //Compute next position
         next_pos.x = current_pos.x + speedx;
         next_pos.y = current_pos.y + speedy;
@@ -189,17 +193,12 @@ worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_se
                         printf("Worker %d collided with worker %d \n", id, other_id);
                         unlocksem(collision_semid,other_id-1);//signal(collision_id)
 
-                        struct speed_s speed = {.speed_x = speedx, .speed_y = speedy};
-                        struct mymsgbuf sendbuf ={
-                                                .sender = id,
-                                                .speed = speed  // message text 
-                                                };
+                        speed = {.speed_x = speedx, .speed_y = speedy};
+                        sendbuf = {.sender = id,.speed = speed};  // message text 
 
-                        send_message(msgq_id,&sendbuf, other_id);
+                        send_message(msgq_id,(struct mymsgbuf*)&sendbuf, other_id);
 
-                        struct mymsgbuf receivebuf;
-
-                        read_message(msgq_id,&receivebuf, id);
+                        read_message(msgq_id,(struct mymsgbuf*)&receivebuf, id);
                         speedx = receivebuf.speed.speed_x;
                         speedy = receivebuf.speed.speed_y;
                         next_pos.x = current_pos.x + speedx;
