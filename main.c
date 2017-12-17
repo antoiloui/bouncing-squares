@@ -506,15 +506,15 @@ int main(int argc, char** argv){
 
 
     //Creating SQUARE_COUNT workers
-	for(int cntr = 0,id = 1; cntr < SQUARE_COUNT ; cntr++){
-		
+    for(int cntr = 0,id = 1; cntr < SQUARE_COUNT ; cntr++){
+        
         pid = fork();
  
-		if(pid < 0){
-			perror("Process creation failed");
-			exit(1);
-		}
-		if(pid == 0){
+        if(pid < 0){
+            perror("Process creation failed");
+            exit(1);
+        }
+        if(pid == 0){
 
             if(cntr < SQUARE_COUNT){
                 //This is a son
@@ -528,12 +528,12 @@ int main(int argc, char** argv){
                 
             cntr = SQUARE_COUNT;
 
-		}
-		else{
-			//This is the father
-			id++;
-		}
-	} 
+        }
+        else{
+            //This is the father
+            id++;
+        }
+    } 
 
 
 
