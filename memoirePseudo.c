@@ -15,5 +15,9 @@ struct mymsgbuf {
 	long type; 
 	int sender; 
 struct speed_s speed;
-// with struct speed_s = {speed_x,speed_y}
+};
+
+struct speed_s{
+  int speed_x;
+  int speed_y;
 };
