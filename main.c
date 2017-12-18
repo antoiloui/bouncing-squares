@@ -12,7 +12,6 @@
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>
 
 //Including user libraries
 #include "process_communication.h"
