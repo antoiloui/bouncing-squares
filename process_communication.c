@@ -48,10 +48,10 @@ void locksem(int sid, int member){
                 fprintf(stderr, "Error: %s \n",strerror(errnum));
                 exit(1);
         }
-        else
+/*        else
                 printf("Semaphore(sem %d of set %d) - 1 ,value : %d\n",member,sid,getval(sid,member));
 
-
+*/
 }
 
 
@@ -71,9 +71,9 @@ void unlocksem(int sid, int member){
                 fprintf(stderr, "Error: %s \n",strerror(errnum));
                 exit(1);
         }
-        else
+/*        else
                 printf("Semaphore(sem %d of set %d) + 1 ,value : %d\n",member,sid,getval(sid,member));
-
+*/
 }
 
 

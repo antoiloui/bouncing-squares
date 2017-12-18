@@ -32,24 +32,29 @@ int kbhit(void);//Returns 1 if the user pressed a key, and 0 otherwise
 
 
 void control_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int msgq_id, int shmid){
+    printf("Control process initialised\n");
+
     char c;
     point finish = {.x = 1};
+    bool b = true;
+    while(b){
+        if(kbhit()){
+            printf("Enter pressed, program exited.\n");
+            writeshm(segptr,0,finish);
 
-    if(kbhit()){
-        printf("Enter pressed, program exited.\n");
-        writeshm(segptr,0,finish);
+            // Close messages queues
+            remove_queue(msgq_id);
 
-        // Close messages queues
-        remove_queue(msgq_id);
+            // Close shared memory
+            remove_shm(shmid);
 
-        // Close shared memory
-        remove_shm(shmid);
-
-        //Close semaphores
-        remove_sem(workers_semid);
-        remove_sem(access_semid);
-        remove_sem(posUpdated_semid);
-        remove_sem(collision_semid);
+            //Close semaphores
+            remove_sem(workers_semid);
+            remove_sem(access_semid);
+            remove_sem(posUpdated_semid);
+            remove_sem(collision_semid);
+            b = false;
+        }
     }
 }
   
@@ -61,38 +66,28 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
     point allUpdated;
 
     unlocksem(access_semid,0); //Give access to the square table
-    printf("Access given to one worker\n");
 
     //As long as the user doesn't quit
     while(readshm(segptr,0).x != 1) {
-
-        //Display
-        printf("\nEnter next cycle\n");
-        printf("Compute next table\n");
 
 
         //Wait before all workers have updated their position
         for(int cntr = 0; cntr < SQUARE_COUNT ; cntr++) {
             locksem(posUpdated_semid,0);
-            printf("Update %d\n",cntr);
+            //printf("Update %d\n",cntr);
         }
-
-        printf("All workers updated their position\n");
-
 
         //Set allUpdated to true
         allUpdated.x = 1;
         writeshm(segptr,2*SQUARE_COUNT+1,allUpdated); 
-        printf("Allupdated put to 1 : %d \n",readshm(segptr,2*SQUARE_COUNT+1).x);
+        //printf("Allupdated put to 1 : %d \n",readshm(segptr,2*SQUARE_COUNT+1).x);
         
 
         //Unlock all semaphores waiting for collision
         for(id = 1; id <= SQUARE_COUNT; id++){ 
-            printf("Unlocking collision %d\n",id);
             unlocksem(collision_semid,id-1);
-
         }
-        printf("All collisions unlocked\n");
+        //printf("All collisions unlocked\n");
 
 
         //Updating the table_of_pixels
@@ -123,7 +118,7 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
         //Set allUpdated to false
         allUpdated.x = 0;
         writeshm(segptr,2*SQUARE_COUNT+1,allUpdated); 
-        printf("Allupdated put to 0 : %d \n",readshm(segptr,2*SQUARE_COUNT+1).x);
+        //printf("Allupdated put to 0 : %d \n",readshm(segptr,2*SQUARE_COUNT+1).x);
 
 
         //Wait a bit
@@ -147,11 +142,11 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
 
     while(readshm(segptr,0).x != 1) {
 
-        printf("Worker %d is working\n", id);
+        //printf("Worker %d is working\n", id);
         locksem(access_semid,0); //wait(accessPositionTable)
         
         //Get current position
-        printf("Worker %d computing position\n", id);
+        //printf("Worker %d computing position\n", id);
         current_pos = readshm(segptr,id);
 
         //Compute next position
@@ -186,7 +181,7 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
             if(other_id != id){
                 point other_pos = readshm(segptr,other_id);
                 if(hasIntersection(next_pos,other_pos)){
-                    printf("Worker %d intersects, is the other one updated? : %d \n",id,readshm(segptr,SQUARE_COUNT+other_id).x);
+                    //printf("Worker %d intersects, is the other one updated? : %d \n",id,readshm(segptr,SQUARE_COUNT+other_id).x);
                     if(readshm(segptr,SQUARE_COUNT+other_id).x == 1){ //if the other has updated it's position
                         printf("Worker %d collided with worker %d \n", id, other_id);
                         unlocksem(collision_semid,other_id-1);//signal(collision_id)
@@ -199,7 +194,7 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
                         struct mymsgbuf receivebuf;
 
                         read_message(msgq_id,&receivebuf, id);
-                        printf("Worker %d Speed received \n",id);
+                        //printf("Worker %d Speed received \n",id);
 
                         //If the received speed is already the speed of the square
                         if(receivebuf.speed.speed_x == speedx && receivebuf.speed.speed_y == speedy){
@@ -228,24 +223,24 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
         writeshm(segptr,SQUARE_COUNT+id,isUpdated);
 
         unlocksem(access_semid,0);//signal(accessPositionTable)
-        printf("Worker %d has released access\n", id);
+        //printf("Worker %d has released access\n", id);
 
         unlocksem(posUpdated_semid,0); //has updated it's position/ is also counter
-        printf("Worker %d position updated\n", id);
+        //printf("Worker %d position updated\n", id);
 
         locksem(collision_semid,id-1); // Wait for collision
-        printf("Worker %d Collision semaphore unlocked (a)\n",id);
+        //printf("Worker %d Collision semaphore unlocked (a)\n",id);
 
 
 
-        printf("allUpdated is : %d\n",readshm(segptr,2*SQUARE_COUNT+1).x);
+        //printf("allUpdated is : %d\n",readshm(segptr,2*SQUARE_COUNT+1).x);
 
         while(readshm(segptr,2*SQUARE_COUNT+1).x == 0){
-            printf("Worker %d INSIDE THE WHILE\n",id);
+            //printf("Worker %d INSIDE THE WHILE\n",id);
             struct mymsgbuf receivebuf; //Container to receive speed
 
             read_message(msgq_id,&receivebuf,id); //Read speed
-            printf("Worker %d Speed received \n",id);
+            //printf("Worker %d Speed received \n",id);
 
             long other_id = (long)receivebuf.sender; //Get the id of the sender
 
@@ -254,18 +249,18 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
 
             speedx = receivebuf.speed.speed_x; //Update speed
             speedy = receivebuf.speed.speed_y;
-            printf("Speed received x:%d y:%d \n", speedx, speedy);
+            printf("Worker %d speed received x:%d y:%d \n",id, speedx, speedy);
             
             printf("Worker %d sent speed: x:%d y:%d\n",id,send_speed.speed_x,send_speed.speed_y);
             send_message(msgq_id,&sendbuf); //Send speed back to sender
-            printf("Worker %d Speed sent \n",id);
+            //printf("Worker %d Speed sent \n",id);
 
             locksem(collision_semid,id-1); // Wait for collision
-            printf("Worker %d Collision semaphore unlocked (b)\n",id);
+            //printf("Worker %d Collision semaphore unlocked (b)\n",id);
 
         }
 
-        printf("Worker %d Waiting to reactivate\n",id);
+        //printf("Worker %d Waiting to reactivate\n",id);
 
         locksem(workers_semid,id-1); // Wait for the master process
 
@@ -342,6 +337,11 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
         printf("speedy = ");
         scanf("%d",&s_speedy);
 
+        //Clear the input buffer so that kbhit() works
+        int c = 0;
+        while ((c = getchar()) != '\n' && c != EOF)
+            printf("emptying buffer\n");
+            
 
         square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy};
         point new_square_position = {.x = s_x, .y = s_y};
@@ -366,11 +366,6 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
     }
 
-    //Clear the input buffer so that kbhit() works
-    int c = 0;
-    while ((c = getchar()) != '\n' && c != EOF)
-        printf("emptying buffer\n")
-        
 
     k = selfinit_squares;
 
@@ -580,7 +575,7 @@ int main(int argc, char** argv){
             } else{
                 //Initializes SDL and the colours
                 init_output();
-                printf("MASTER          id = %d\n", id);
+                printf("MASTER   id = %d\n", id);
                 master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
 
             }
@@ -598,7 +593,7 @@ int main(int argc, char** argv){
     printf("Initialized\n");
     if(pid != 0)
         control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
-    printf("CONTROLER          id = %d \n", id);
+    printf("CONTROLER       id = %d \n", id);
 
     return 0;
 }
