@@ -54,7 +54,7 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT);
 
 
 /************************************************************************
-/* Returns 1 if the user pressed a key, and 0 otherwise
+* Returns 1 if the user pressed a key, and 0 otherwise
 *************************************************************************/
 int kbhit(void);
 
@@ -387,7 +387,6 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
   
     // Initialising squares by user and randomly
     int selfinit_squares = 0;
-    int table_size = 0;
     int k = 0;
 
     int s_x = 0;
@@ -659,18 +658,6 @@ int main(int argc, char** argv){
 
     point allUpdated = {.x = 0,.y = 0}; // allUpdated is false
     writeshm(segptr,2*SQUARE_COUNT + 1,allUpdated); //finish = 0;
-
-
-    int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
-
-    for(id = 1; id <= SQUARE_COUNT; id++){
-        for(int j = 0; j < SQUARE_WIDTH; j++){
-            for(int k = 0; k < SQUARE_WIDTH; k++){
-                point position = readshm(segptr,id);
-                table_of_pixels[position.x+j][position.y+k] = id%4 +1;
-            }
-        }
-    }
 
 
     //Creating SQUARE_COUNT workers
