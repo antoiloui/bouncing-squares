@@ -21,6 +21,7 @@
 
 /************************************************************************PROTOTYPES*********************************************************************************************/
 
+
 /************************************************************************
 * Returns 1 if two squares intersect, 0 otherwise
 *
@@ -28,6 +29,7 @@
 * -Position of two squares given by the point structure
 **************************************************************************/
 int hasIntersection(point a, point b);
+
 
 /************************************************************************
 * Returns 1 if a square intersects with any squares 
@@ -49,10 +51,13 @@ bool square_intersected(square* squares_table, square new_square, int k);
 * -number of squares to initialize
 *************************************************************************/
 void initializeSquares(square* squares_table,int SQUARE_COUNT); 
+
+
 /************************************************************************
 /* Returns 1 if the user pressed a key, and 0 otherwise
 *************************************************************************/
 int kbhit(void);
+
 
 /************************************************************************
 * Process managing the user input during the execution of the program 
@@ -66,6 +71,8 @@ int kbhit(void);
 * -ID of the shared memory segment
 **************************************************************************/
 void control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int control_semid,int msgq_id, int shmid);
+
+
 /************************************************************************
 * Process managing the different workers and update the table of pixels with new positions
 *
@@ -91,11 +98,14 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
 **************************************************************************/
 void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int collision_semid,int msgq_id, int speedx, int speedy);
 
+
+
+
+
+
+
 /*************************************************************************PROCESSES********************************************************************************************/
 
-
-
-/*****************************************************************************************************************************************************************************/
 
 void control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int control_semid,int msgq_id, int shmid){
 
@@ -214,6 +224,7 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
 
     printf("Exit the master process.\n");
 }
+
 
 
 
@@ -344,7 +355,6 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
 /***************************************************************************METHODS************************************************************************************/
 
 
-
 int hasIntersection(point a, point b){
     int rc = 0;
   
@@ -365,12 +375,9 @@ bool square_intersected(square* squares_table, square new_square, int k){
 
         point square_position = {.x = squares_table[j].x, .y = squares_table[j].y};
 
-        if(hasIntersection(new_square_position, square_position)){
-            printf("New square has intersection with square number %d, another one is being created.\n", j);
+        if(hasIntersection(new_square_position, square_position))
             return true;
-        }
     }
-    printf("New square does not have any intersection !\n");
     return false;
 }
 
