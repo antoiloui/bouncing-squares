@@ -195,24 +195,28 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
                         printf("Worker %d collided with worker %d \n", id, other_id);
                         unlocksem(collision_semid,other_id-1);//signal(collision_id)
                        
-                        struct speed_s speed;
-                        speed.speed_x = speedx;
-                        speed.speed_y = speedy;
-                        struct mymsgbuf sendbuf;
-                        sendbuf.type = other_id;
-                        sendbuf.sender = id;
-                        sendbuf.speed = speed;    
+                        struct speed_s send_speed = {.speed_x = speedx, .speed_y = speedy};
+                        struct mymsgbuf sendbuf ={.type = other_id, .sender = id,.speed = send_speed};
 
                         send_message(msgq_id,&sendbuf);
-                        printf("Worker %d sent speed: x:%d y:%d\n",id,speed.speed_x,speed.speed_y);
+                        printf("Worker %d sent speed: x:%d y:%d\n",id,send_speed.speed_x,send_speed.speed_y);
                         struct mymsgbuf receivebuf;
 
                         read_message(msgq_id,&receivebuf, id);
                         printf("Worker %d Speed received \n",id);
 
-                        speedx = receivebuf.speed.speed_x;
-                        speedy = receivebuf.speed.speed_y;
+                        //If the received speed is already the speed of the square
+                        if(receivebuf.speed.speed_x == speedx && receivebuf.speed.speed_y == speedy){
+                            // Change it to the opposite speed
+                            speedx = - receivebuf.speed.speed_x;
+                            speedy = - receivebuf.speed.speed_y;
+                        }else{
+                            // Change with the speed of the other square
+                            speedx = receivebuf.speed.speed_x;
+                            speedy = receivebuf.speed.speed_y;
+                        }
                         printf("Speed received x:%d y:%d \n", speedx, speedy);
+
                         next_pos.x = current_pos.x + speedx;
                         next_pos.y = current_pos.y + speedy;
                         printf("Next position received: %d %d \n", next_pos.x, next_pos.y);
@@ -222,7 +226,6 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
                 }          
             }
         }
-
 
         writeshm(segptr,id,next_pos); //Update position
         point isUpdated = {.x = 1};
@@ -253,14 +256,11 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
             struct speed_s send_speed = {.speed_x = speedx, .speed_y = speedy};
             struct mymsgbuf sendbuf ={.type = other_id, .sender = id,.speed = send_speed};
 
-
             speedx = receivebuf.speed.speed_x; //Update speed
             speedy = receivebuf.speed.speed_y;
-
             printf("Speed received x:%d y:%d \n", speedx, speedy);
-
-            printf("Worker %d sending x:%d y:%d \n",id,send_speed.speed_x,send_speed.speed_y);              
-
+            
+            printf("Worker %d sent speed: x:%d y:%d\n",id,send_speed.speed_x,send_speed.speed_y);
             send_message(msgq_id,&sendbuf); //Send speed back to sender
             printf("Worker %d Speed sent \n",id);
 
