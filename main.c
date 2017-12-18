@@ -32,25 +32,31 @@ int kbhit(void);//Returns 1 if the user pressed a key, and 0 otherwise
 
 
 void control_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int msgq_id, int shmid){
-    char c;
+
     point finish = {.x = 1};
+    bool stop = false;
 
-    if(kbhit()){
-        printf("Enter pressed, program exited.\n");
-        writeshm(segptr,0,finish);
+    while(!stop){
+        if(kbhit()){
+            printf("Enter pressed, program exited.\n");
+            writeshm(segptr,0,finish);
 
-        // Close messages queues
-        remove_queue(msgq_id);
+            // Close messages queues
+            remove_queue(msgq_id);
 
-        // Close shared memory
-        remove_shm(shmid);
+            // Close shared memory
+            remove_shm(shmid);
 
-        //Close semaphores
-        remove_sem(workers_semid);
-        remove_sem(access_semid);
-        remove_sem(posUpdated_semid);
-        remove_sem(collision_semid);
+            //Close semaphores
+            remove_sem(workers_semid);
+            remove_sem(access_semid);
+            remove_sem(posUpdated_semid);
+            remove_sem(collision_semid);
+
+            stop = true;
+        }
     }
+  
 }
   
 
@@ -342,34 +348,34 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
         printf("speedy = ");
         scanf("%d",&s_speedy);
 
-
         square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy};
-        point new_square_position = {.x = s_x, .y = s_y};
 
         // Check if the coordinates are in the bounds of the grid
         if(s_x + SQUARE_WIDTH <= SIZE_X && s_y + SQUARE_WIDTH <= SIZE_Y) {
-            for(int j = 0; j < table_size; j++){
-                point square_position = {.x = squares_table[j].x, .y = squares_table[j].y};
-                if(hasIntersection(new_square_position,square_position)) { // Check intersection with other squares
-                    printf("Squares overlap, please enter new integer value.\n");
-                    continue;
-                }
+
+            if(square_intersected(squares_table, new_square, k)){
+                //If there is, we loop again
+                printf("Square number %d has an intersection with another square, another one is being created.\n",k);
+                continue;
+            }else{
+                //If there is none, we append the new square to the table
+                printf("Square number %d is being created.\n", k);
+                squares_table[k] = new_square;
+                k++;
             }
+
         }else{
             printf("Square out of bounds, please enter new integer values.\n");
             continue;
         }
 
-        squares_table[k] = new_square;
-        table_size++;
-        k++;
-
     }
 
     //Clear the input buffer so that kbhit() works
     int c = 0;
-    while ((c = getchar()) != '\n' && c != EOF)
-        printf("emptying buffer\n")
+    while ((c = getchar()) != '\n' && c != EOF){
+        printf("Emptying buffer.\n");
+    }
         
 
     k = selfinit_squares;
@@ -393,11 +399,11 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
             continue;
         }
 
-
-        if(square_intersected(squares_table, new_square, k))
+        if(square_intersected(squares_table, new_square, k)){
             //If there is, we loop again
+            printf("Square number %d has an intersection with another square, another one is being created.\n",k);
             continue;
-        else{
+        }else{
             //If there is none, we append the new square to the table
             printf("Square number %d is being created.\n", k);
             squares_table[k] = new_square;
@@ -429,7 +435,7 @@ int kbhit(void){
 
     //If we did manage to read something
     if(ch != EOF){
-        if(ch == 'a'){
+        if(ch == '\n'){
             //Put back the character on the input stream
             ungetc(ch, stdin);
             return 1;
@@ -577,17 +583,16 @@ int main(int argc, char** argv){
                 int speedy = squares_table[id-1].speedy;
                 printf("WORKER          id = %d\n", id);
                 worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,speedx,speedy);
-            } else{
+            }else{
                 //Initializes SDL and the colours
                 init_output();
                 printf("MASTER          id = %d\n", id);
                 master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
 
-            }
-                
+            } 
             cntr = SQUARE_COUNT+1;
-
         }
+
         else{
             //This is the father
             id++;
