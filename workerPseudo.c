@@ -19,7 +19,10 @@ worker(int id,point* segptr,int SQUARE_COUNT,semaphore_Ids,int msgq_id,int speed
 					msgq_id!(other_id,mySpeed)
 					// Receive other speed
 					msgq_id?(id,otherSpeed) 
-					updateSpeed();
+					if(mySpeed == otherSpeed);
+						mySpeed *= -1;
+					else 
+						mySpeed = otherSpeed;
 					updatePosition();
 					other_id = 0;
 					continue;
