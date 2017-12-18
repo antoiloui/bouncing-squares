@@ -21,23 +21,82 @@
 
 /************************************************************************PROTOTYPES*********************************************************************************************/
 
-int hasIntersection(point a, point b); //Returns 1 if the two squares intersect and 0 otherwise
+/************************************************************************
+* Returns 1 if two squares intersect, 0 otherwise
+*
+* ARGUMENTS:
+* -Position of two squares given by the point structure
+**************************************************************************/
+int hasIntersection(point a, point b);
 
-bool square_intersected(square* squares_table, square new_square, int k); //check if new random square does not already exist
+/************************************************************************
+* Returns 1 if a square intersects with any squares 
+* in the squares_table array
+*
+* ARGUMENTS:
+* -Position of a squares 
+* -pointer to squares_table
+* -size of the squares_table
+**************************************************************************/
+bool square_intersected(square* squares_table, square new_square, int k); 
 
-void initializeSquares(square* squares_table,int SQUARE_COUNT); //Initialize the squares
 
-int kbhit(void);//Returns 1 if the user pressed a key, and 0 otherwise
+/************************************************************************
+* Creates SQUARE_COUNT squares and puts them in the squares_table array
+* 
+* ARGUMENTS:
+* -pointer to squares_table
+* -number of squares to initialize
+*************************************************************************/
+void initializeSquares(square* squares_table,int SQUARE_COUNT); 
+/************************************************************************
+/* Returns 1 if the user pressed a key, and 0 otherwise
+*************************************************************************/
+int kbhit(void);
+
+/************************************************************************
+* Process managing the user input during the execution of the program 
+* Does nothing until the user presses <Enter>
+*
+* ARGUMENTS:
+* -pointer to the shared memory segment
+* -number of squares initialised
+* -IDs of all the semaphores sets (5)
+* -ID of the message queue
+* -ID of the shared memory segment
+**************************************************************************/
+void control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int control_semid,int msgq_id, int shmid);
+/************************************************************************
+* Process managing the different workers and update the table of pixels with new positions
+*
+* ARGUMENTS:
+* -pointer to the shared memory segment
+* -number of squares initialised
+* -IDs of all the semaphores sets (5)
+**************************************************************************/
+void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int control_semid);
 
 
+/************************************************************************
+* Process calculating the new position of a square
+* and managing eventual  collisions 
+*
+* ARGUMENTS:
+* -ID of the square
+* -number of squares initialised
+* -pointer to the shared memory segment
+* -IDs of 4 semaphore sets (except control_semid)
+* -ID of the message queue
+* -Speed of the square among the x- and y-axis
+**************************************************************************/
+void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int collision_semid,int msgq_id, int speedx, int speedy);
 
 /*************************************************************************PROCESSES********************************************************************************************/
 
 
 
-/*****************************************************************************************************************************************************************************
-* Manage the input of the user during the execution of the program (do nothing till the user pushes enter)
-******************************************************************************************************************************************************************************/
+/*****************************************************************************************************************************************************************************/
+
 void control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int control_semid,int msgq_id, int shmid){
 
     point finish = {.x = 1};
@@ -81,9 +140,8 @@ void control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int acc
   
 
 
-/****************************************************************************************************************************************************************************
-* Manage the different workers and update the table of pixels with new positions
-******************************************************************************************************************************************************************************/
+
+
 void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int control_semid){
 
     int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
@@ -160,9 +218,6 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
 
 
 
-/***************************************************************************************************************************************************************************
-* Calculate the new position of a worker and manage the collision if needed
-******************************************************************************************************************************************************************************/
 void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int collision_semid,int msgq_id, int speedx, int speedy){
 
     point next_pos;
@@ -171,6 +226,7 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
     printf("Worker %d initialised.\n", id);
 
     while(readshm(segptr,0).x != 1) {
+
 
         locksem(access_semid,0); //wait(accessPositionTable)
         
@@ -289,9 +345,6 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
 
 
 
-/****************************************************************************************************************************************************************************
-* Check if two squares overlap (return 1 if they do, 0 otherwise)
-******************************************************************************************************************************************************************************/
 int hasIntersection(point a, point b){
     int rc = 0;
   
@@ -304,9 +357,6 @@ int hasIntersection(point a, point b){
 
 
 
-/****************************************************************************************************************************************************************************
-* Check if a new square has intersection with all other squares already created (return true if there is intersection, false otherwise)
-******************************************************************************************************************************************************************************/
 bool square_intersected(square* squares_table, square new_square, int k){
 
     point new_square_position = {.x = new_square.x, .y = new_square.y};
@@ -326,9 +376,6 @@ bool square_intersected(square* squares_table, square new_square, int k){
 
 
 
-/****************************************************************************************************************************************************************************
-* Inialize the squares (by asking the user to do it for the number he wants to and do the rest randomly)
-******************************************************************************************************************************************************************************/
 void initializeSquares(square* squares_table,int SQUARE_COUNT){
   
     // Initialising squares by user and randomly
@@ -456,9 +503,6 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
 
 
-/***************************************************************************************************************************************************************************
-* Check if the user pushes enter (return 1 if he does, 0 otherwise)
-******************************************************************************************************************************************************************************/
 int kbhit(void){
     struct termios oldt, newt;
     int ch;
