@@ -24,13 +24,13 @@
 int hasIntersection(point a, point b); //Returns 1 if the two squares intersect and 0 otherwise
 bool square_intersected(square* squares_table, square new_square, int k); //check if new random square does not already exist
 void initializeSquares(square* squares_table,int SQUARE_COUNT); //Initialize the squares
-//int kbhit(void);//Returns 1 if the user pressed a key, and 0 otherwise
+int kbhit(void);//Returns 1 if the user pressed a key, and 0 otherwise
 
 
 
 /*****************************************PROCESSES**********************************************/
 
-/*
+
 void control_process(point* segptr, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int msgq_id, int shmid){
     char c;
     point finish = {.x = 1};
@@ -53,8 +53,6 @@ void control_process(point* segptr, int workers_semid, int access_semid, int pos
     }
 }
   
-  
-*/
 
 void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid ) {
 
@@ -68,8 +66,6 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
     //As long as the user doesn't quit
     while(readshm(segptr,0).x != 1) {
 
-
-        
         //Display
         printf("\nEnter next cycle\n");
         printf("Compute next table\n");
@@ -370,6 +366,12 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
     }
 
+    //Clear the input buffer so that kbhit() works
+    int c = 0;
+    while ((c = getchar()) != '\n' && c != EOF)
+        printf("emptying buffer\n")
+        
+
     k = selfinit_squares;
 
     // Randomly generate the (remaining) squares
@@ -404,7 +406,7 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
     }
 }
 
-/*
+
 int kbhit(void){
     struct termios oldt, newt;
     int ch;
@@ -436,7 +438,7 @@ int kbhit(void){
 
     return 0;
 }
-*/
+
 
 /********************************************************MAIN******************************************/
 
@@ -546,10 +548,20 @@ int main(int argc, char** argv){
     writeshm(segptr,2*SQUARE_COUNT + 1,allUpdated); //finish = 0;
 
 
+    int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
+
+    for(id = 1; id <= SQUARE_COUNT; id++){
+        for(int j = 0; j < SQUARE_WIDTH; j++){
+            for(int k = 0; k < SQUARE_WIDTH; k++){
+                point position = readshm(segptr,id);
+                table_of_pixels[position.x+j][position.y+k] = id%4 +1;
+            }
+        }
+    }
 
 
     //Creating SQUARE_COUNT workers
-    for(int cntr = 0,id = 1; cntr < SQUARE_COUNT ; cntr++){
+    for(int cntr = 0,id = 1; cntr < SQUARE_COUNT+1 ; cntr++){
         
         pid = fork();
  
@@ -566,11 +578,14 @@ int main(int argc, char** argv){
                 printf("WORKER          id = %d\n", id);
                 worker(id,SQUARE_COUNT,segptr,workers_semid,access_semid,posUpdated_semid,collision_semid,msgq_id,speedx,speedy);
             } else{
-                printf("CONTROLER          id = %d \n", id);
-                //control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
+                //Initializes SDL and the colours
+                init_output();
+                printf("MASTER          id = %d\n", id);
+                master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
+
             }
                 
-            cntr = SQUARE_COUNT;
+            cntr = SQUARE_COUNT+1;
 
         }
         else{
@@ -579,24 +594,11 @@ int main(int argc, char** argv){
         }
     }
 
-    int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
 
-    for(id = 1; id <= SQUARE_COUNT; id++){
-        for(int j = 0; j < SQUARE_WIDTH; j++){
-            for(int k = 0; k < SQUARE_WIDTH; k++){
-                point position = readshm(segptr,id);
-                table_of_pixels[position.x+j][position.y+k] = id%4 +1;
-            }
-        }
-    }
-
-    //Initializes SDL and the colours
-    init_output();
     printf("Initialized\n");
-
     if(pid != 0)
-        master_process(segptr,SQUARE_COUNT,workers_semid,access_semid,posUpdated_semid,collision_semid);
-
+        control_process(segptr, workers_semid, access_semid, posUpdated_semid, collision_semid, msgq_id, shmid);
+    printf("CONTROLER          id = %d \n", id);
 
     return 0;
 }
