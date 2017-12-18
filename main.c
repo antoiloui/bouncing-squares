@@ -225,7 +225,7 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
 
 
         writeshm(segptr,id,next_pos); //Update position
-        point isUpdated = {.x = 1};
+        point isUpdated = {.x = 1}; //Set isUpdated to true
         writeshm(segptr,SQUARE_COUNT+id,isUpdated);
 
         unlocksem(access_semid,0);//signal(accessPositionTable)
