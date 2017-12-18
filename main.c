@@ -20,17 +20,25 @@
 #include "output.h"
 
 
-/************************************PROTOTYPES****************************************************/
+/************************************************************************PROTOTYPES*********************************************************************************************/
+
 int hasIntersection(point a, point b); //Returns 1 if the two squares intersect and 0 otherwise
+
 bool square_intersected(square* squares_table, square new_square, int k); //check if new random square does not already exist
+
 void initializeSquares(square* squares_table,int SQUARE_COUNT); //Initialize the squares
+
 int kbhit(void);//Returns 1 if the user pressed a key, and 0 otherwise
 
 
 
-/*****************************************PROCESSES**********************************************/
+/*************************************************************************PROCESSES********************************************************************************************/
 
 
+
+/*****************************************************************************************************************************************************************************
+* Manage the input of the user during the execution of the program (do nothing till the user pushes enter)
+******************************************************************************************************************************************************************************/
 void control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int control_semid,int msgq_id, int shmid){
 
     point finish = {.x = 1};
@@ -73,7 +81,11 @@ void control_process(point* segptr, int SQUARE_COUNT, int workers_semid, int acc
 }
   
 
-void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int control_semid) {
+
+/****************************************************************************************************************************************************************************
+* Manage the different workers and update the table of pixels with new positions
+******************************************************************************************************************************************************************************/
+void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int access_semid, int posUpdated_semid, int collision_semid, int control_semid){
 
     int table_of_pixels[SIZE_X][SIZE_Y];  //Will store the states of the pixels
     int id,j,k;
@@ -110,7 +122,6 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
 
         for(id = 1; id <= SQUARE_COUNT; id++){
             point position = readshm(segptr,id);
-            printf("Position of square %d : (%d,%d)\n",id,position.x,position.y);
             for(j = 0; j < SQUARE_WIDTH; j++){
                 for(k = 0; k < SQUARE_WIDTH; k++){
                     table_of_pixels[position.x+j][position.y+k] = id%4 +1;
@@ -149,6 +160,10 @@ void master_process(point* segptr,int SQUARE_COUNT, int workers_semid, int acces
 
 
 
+
+/***************************************************************************************************************************************************************************
+* Calculate the new position of a worker and manage the collision if needed
+******************************************************************************************************************************************************************************/
 void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int access_semid, int posUpdated_semid,int collision_semid,int msgq_id, int speedx, int speedy){
 
     point next_pos;
@@ -206,27 +221,24 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
                         struct mymsgbuf sendbuf ={.type = other_id, .sender = id,.speed = send_speed};
 
                         send_message(msgq_id,&sendbuf);
-                        printf("Worker %d sent speed: x:%d y:%d\n",id,send_speed.speed_x,send_speed.speed_y);
                         struct mymsgbuf receivebuf;
 
                         read_message(msgq_id,&receivebuf, id);
-                        //printf("Worker %d Speed received \n",id);
 
                         //If the received speed is already the speed of the square
                         if(receivebuf.speed.speed_x == speedx && receivebuf.speed.speed_y == speedy){
                             // Change it to the opposite speed
-                            speedx = - receivebuf.speed.speed_x;
-                            speedy = - receivebuf.speed.speed_y;
+                            speedx *= - 1;
+                            speedy *= - 1;
                         }else{
                             // Change with the speed of the other square
                             speedx = receivebuf.speed.speed_x;
                             speedy = receivebuf.speed.speed_y;
                         }
-                        printf("Speed received x:%d y:%d \n", speedx, speedy);
 
                         next_pos.x = current_pos.x + speedx;
                         next_pos.y = current_pos.y + speedy;
-                        printf("Next position received: %d %d \n", next_pos.x, next_pos.y);
+
                         other_id = 0;
                         continue;
                     }
@@ -239,24 +251,17 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
         writeshm(segptr,SQUARE_COUNT+id,isUpdated);
 
         unlocksem(access_semid,0);//signal(accessPositionTable)
-        //printf("Worker %d has released access\n", id);
 
         unlocksem(posUpdated_semid,0); //has updated it's position/ is also counter
-        //printf("Worker %d position updated\n", id);
 
         locksem(collision_semid,id-1); // Wait for collision
-        //printf("Worker %d Collision semaphore unlocked (a)\n",id);
 
-
-
-        //printf("allUpdated is : %d\n",readshm(segptr,2*SQUARE_COUNT+1).x);
 
         while(readshm(segptr,2*SQUARE_COUNT+1).x == 0){
-            //printf("Worker %d INSIDE THE WHILE\n",id);
+
             struct mymsgbuf receivebuf; //Container to receive speed
 
             read_message(msgq_id,&receivebuf,id); //Read speed
-            //printf("Worker %d Speed received \n",id);
 
             long other_id = (long)receivebuf.sender; //Get the id of the sender
 
@@ -265,15 +270,10 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
 
             speedx = receivebuf.speed.speed_x; //Update speed
             speedy = receivebuf.speed.speed_y;
-            printf("Worker %d speed received x:%d y:%d \n",id, speedx, speedy);
             
-            printf("Worker %d sent speed: x:%d y:%d\n",id,send_speed.speed_x,send_speed.speed_y);
             send_message(msgq_id,&sendbuf); //Send speed back to sender
-            //printf("Worker %d Speed sent \n",id);
 
             locksem(collision_semid,id-1); // Wait for collision
-            //printf("Worker %d Collision semaphore unlocked (b)\n",id);
-
         }
 
         locksem(workers_semid,id-1); // Wait for the master process
@@ -286,20 +286,28 @@ void worker(int id, int SQUARE_COUNT, point* segptr, int workers_semid, int acce
 
 
 
-/******************************************FUNCTIONS***************************************************/
+/***************************************************************************METHODS************************************************************************************/
 
 
+
+/****************************************************************************************************************************************************************************
+* Check if two squares overlap (return 1 if they do, 0 otherwise)
+******************************************************************************************************************************************************************************/
 int hasIntersection(point a, point b){
     int rc = 0;
   
     if(a.y < b.y+SQUARE_WIDTH && a.y+SQUARE_WIDTH > b.y &&
         a.x < b.x+SQUARE_WIDTH && a.x+SQUARE_WIDTH > b.x)
         rc = 1;
+
     return rc;
 }
 
 
 
+/****************************************************************************************************************************************************************************
+* Check if a new square has intersection with all other squares already created (return true if there is intersection, false otherwise)
+******************************************************************************************************************************************************************************/
 bool square_intersected(square* squares_table, square new_square, int k){
 
     point new_square_position = {.x = new_square.x, .y = new_square.y};
@@ -318,6 +326,10 @@ bool square_intersected(square* squares_table, square new_square, int k){
 }
 
 
+
+/****************************************************************************************************************************************************************************
+* Inialize the squares (by asking the user to do it for the number he wants to and do the rest randomly)
+******************************************************************************************************************************************************************************/
 void initializeSquares(square* squares_table,int SQUARE_COUNT){
   
     // Initialising squares by user and randomly
@@ -332,27 +344,62 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
     // Initialising squares by user and randomly
     while(true){
-        printf("How many squares would you like to initalize yourself ? Please introduce an integer.\n");
-        scanf("%d",&selfinit_squares);
+        printf("How many squares would you like to initalize yourself ? Please introduce a positive integer.\n");
+        if(scanf("%d",&selfinit_squares) != 1){
+            printf("You didn't enter a number, please try again.\n");
+            while(getchar() != '\n');
+            continue;
+        }
 
         if(selfinit_squares > SQUARE_COUNT)
             printf("You can't initialise more squares than the predefined number of squares, please try again.\n");
+        else if(selfinit_squares < 0)
+            printf("You entered a negative number, please try again.\n");
         else
             break;
     }
 
     while(k < selfinit_squares) {
         printf("Square number %d \n",k+1);
-        printf("Please introduce integer values for the following variables :\n");
+        printf("Please introduce positive integer values for the position :\n");
         printf("x = ");
-        scanf("%d",&s_x);
+        if(scanf("%d",&s_x) != 1){
+            printf("You didn't enter a number, please try again.\n");
+            while(getchar() != '\n');
+            continue;
+        }
         printf("y = ");
-        scanf("%d",&s_y);
+        if(scanf("%d",&s_y) != 1){
+            printf("You didn't enter a number, please try again.\n");
+            while(getchar() != '\n');
+            continue;
+        }
+
+        if(s_x < 0 || s_y < 0){
+            printf("You entered negative values for the position, try again.\n");
+            while(getchar() != '\n');
+            continue;
+        }
+
+        printf("Please introduce -1, 0 or 1 for the speed :\n");
         printf("speedx = ");
-        scanf("%d",&s_speedx);
+        if(scanf("%d",&s_speedx) != 1){
+            printf("You didn't enter a number, please try again.\n");
+            while(getchar() != '\n');
+            continue;
+        }
         printf("speedy = ");
-        scanf("%d",&s_speedy);
-            
+        if(scanf("%d",&s_speedy) != 1){
+            printf("You didn't enter a number, please try again.\n");
+            while(getchar() != '\n');
+            continue;
+        }
+
+        if((s_speedx != -1 && s_speedx != 0 && s_speedx != 1) || (s_speedy != -1 && s_speedy != 0 && s_speedy != 1)){
+            printf("You entered other values than -1, 0 or 1 for the speed, please try again.\n");
+            continue;
+        }
+
         square new_square = {.x = s_x, .y = s_y, .speedx = s_speedx, .speedy = s_speedy};
 
         // Check if the coordinates are in the bounds of the grid
@@ -399,11 +446,9 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 
         if(square_intersected(squares_table, new_square, k)){
             //If there is, we loop again
-            printf("Square number %d has an intersection with another square, another one is being created.\n",k);
             continue;
         }else{
             //If there is none, we append the new square to the table
-            printf("Square number %d is being created.\n", k);
             squares_table[k] = new_square;
             k++;
         } 
@@ -411,6 +456,10 @@ void initializeSquares(square* squares_table,int SQUARE_COUNT){
 }
 
 
+
+/***************************************************************************************************************************************************************************
+* Check if the user pushes enter (return 1 if he does, 0 otherwise)
+******************************************************************************************************************************************************************************/
 int kbhit(void){
     struct termios oldt, newt;
     int ch;
@@ -445,7 +494,7 @@ int kbhit(void){
 }
 
 
-/********************************************************MAIN******************************************/
+/********************************************************************************MAIN**************************************************************************/
 
 int main(int argc, char** argv){
 
@@ -466,11 +515,15 @@ int main(int argc, char** argv){
     int SQUARE_COUNT = 0;
 
     while(true){
-        printf("How many squares running ? Please introduce a non-null integer.\n");
-        scanf("%d", &SQUARE_COUNT);
+        printf("How many squares running ? Please introduce a positive integer.\n");
+        if(scanf("%d", &SQUARE_COUNT) != 1){
+            printf("You didn't enter a number, please try again.\n");
+            while(getchar() != '\n');
+            continue;
+        }
 
-        if(SQUARE_COUNT == 0)
-            printf("Can't have 0 square, please introduce a non-null integer.\n");
+        if(SQUARE_COUNT <= 0)
+            printf("Can't have 0 squares or less, please introduce a positive integer.\n");
         else
             break;
     }
@@ -482,8 +535,7 @@ int main(int argc, char** argv){
 
     //Clear the input buffer so that kbhit() works
     int c = 0;
-    while ((c = getchar()) != '\n' && c != EOF)
-        printf("Emptying buffer.\n");
+    while ((c = getchar()) != '\n' && c != EOF);
 
     key_sem_access = ftok(".", 'A');
     key_sem_workers = ftok(".", 'W');
@@ -508,9 +560,7 @@ int main(int argc, char** argv){
                     exit(1);
             }
     }
-    else{
-            printf("Creating new shared memory segment\n");
-    }
+
 
     /* Attach (map) the shared memory segment into the current process */
     if((segptr = (point*)shmat(shmid, 0, 0)) == (point*)-1){
@@ -605,6 +655,8 @@ int main(int argc, char** argv){
     }    
     if(pid != 0)
         control_process(segptr, SQUARE_COUNT, workers_semid, access_semid, posUpdated_semid, collision_semid,control_semid, msgq_id, shmid);
+
+
    
     return 0;
 }
